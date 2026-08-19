@@ -148,16 +148,20 @@ public class MidpointDrawing {
     }
     
     public static void fillCircleGlow(Graphics2D g, int cx, int cy, int radius, Color centerColor, Color edgeColor) {
-        for (int r = radius; r > 0; r--) {
+        int step = Math.max(1, radius / 20);
+        for (int r = radius; r > 0; r -= step) {
             double t = 1.0 - ((double) r / radius);
             Color c = lerpColor(edgeColor, centerColor, t);
             fillCircle(g, cx, cy, r, c);
         }
+        // Draw center
+        fillCircle(g, cx, cy, Math.max(1, step), centerColor);
     }
     
     public static void fillEllipseGlow(Graphics2D g, int cx, int cy, int rx, int ry, Color centerColor, Color edgeColor) {
         int maxR = Math.max(rx, ry);
-        for (int r = maxR; r > 0; r--) {
+        int step = Math.max(1, maxR / 20);
+        for (int r = maxR; r > 0; r -= step) {
             double t = 1.0 - ((double) r / maxR);
             Color c = lerpColor(edgeColor, centerColor, t);
             int curRx = (int)(rx * ((double)r/maxR));
@@ -166,6 +170,7 @@ public class MidpointDrawing {
                 fillEllipse(g, cx, cy, curRx, curRy, c);
             }
         }
+        fillCircle(g, cx, cy, Math.max(1, step), centerColor);
     }
     
     private static Color lerpColor(Color a, Color b, double t) {

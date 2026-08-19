@@ -17,7 +17,7 @@ public class CreateWorldScene extends Scene {
         // Dirt texture background effect (repeating dirt blocks)
         for (int x = 0; x < width; x += DrawUtils.BLOCK_SIZE) {
             for (int y = 0; y < height; y += DrawUtils.BLOCK_SIZE) {
-                DrawUtils.drawBlock(g2d, x, y, DrawUtils.BLOCK_SIZE, DrawUtils.DIRT_BROWN);
+                DrawUtils.drawDirtBlock(g2d, x, y, DrawUtils.BLOCK_SIZE);
             }
         }
         
@@ -97,11 +97,11 @@ public class CreateWorldScene extends Scene {
             DrawUtils.drawMinecraftText(g2d, (int) (loadProgress * 100) + "%", 280, 350, 18, Color.WHITE);
         }
 
-        // Flash effect at the very end
+        // Fade out at the very end
         if (progress >= 0.95) {
-            double flashAlpha = (progress - 0.95) / 0.05;
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) flashAlpha));
-            g2d.setColor(Color.WHITE);
+            double fadeAlpha = (progress - 0.95) / 0.05;
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) Math.min(1.0, fadeAlpha)));
+            g2d.setColor(Color.BLACK);
             g2d.fillRect(0, 0, width, height);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         }

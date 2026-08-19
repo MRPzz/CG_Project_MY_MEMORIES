@@ -17,16 +17,16 @@ public class TitleScene extends Scene {
         }
 
         // Drifting clouds
-        int cloudX = (int) (width * progress * 0.5);
-        DrawUtils.drawCloud(g2d, 100 - cloudX, 100, 80);
-        DrawUtils.drawCloud(g2d, 400 - cloudX, 150, 120);
-        DrawUtils.drawCloud(g2d, 600 - cloudX, 80, 100);
+        int cloudX = (int) (progress * 100);
+        DrawUtils.drawCloud(g2d, 50 + cloudX, 100, 80);
+        DrawUtils.drawCloud(g2d, 300 + cloudX, 150, 120);
+        DrawUtils.drawCloud(g2d, 500 + cloudX, 80, 100);
 
         // Animated dirt blocks scrolling
         int scrollOffset = (int) (progress * DrawUtils.BLOCK_SIZE * 5) % DrawUtils.BLOCK_SIZE;
         for (int x = -DrawUtils.BLOCK_SIZE; x < width + DrawUtils.BLOCK_SIZE; x += DrawUtils.BLOCK_SIZE) {
             for (int y = height - 60; y < height; y += DrawUtils.BLOCK_SIZE) {
-                DrawUtils.drawBlock(g2d, x - scrollOffset, y, DrawUtils.BLOCK_SIZE, DrawUtils.DIRT_BROWN);
+                DrawUtils.drawDirtBlock(g2d, x - scrollOffset, y, DrawUtils.BLOCK_SIZE);
             }
         }
 

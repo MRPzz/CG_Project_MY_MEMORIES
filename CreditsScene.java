@@ -56,7 +56,7 @@ public class CreditsScene extends Scene {
 
         // Scrolling Math
         // progress 0 to 1 -> scroll Y from height to -1000 to fit all text
-        double smoothP = DrawUtils.easeInOut(progress);
+        double smoothP = progress;
         int startY = height + 100;
         int endY = -700;
         int currentY = (int) (startY + smoothP * (endY - startY));
@@ -75,10 +75,10 @@ public class CreditsScene extends Scene {
         }
 
         // Vignettes (fade in and out on the sides)
-        drawVignette(g2d, progress, 0.1, 0.3, 100, 200, 1); // Tree
-        drawVignette(g2d, progress, 0.3, 0.5, 450, 300, 2); // Diamond
-        drawVignette(g2d, progress, 0.5, 0.7, 100, 400, 3); // House
-        drawVignette(g2d, progress, 0.7, 0.9, 450, 500, 4); // Dragon
+        drawVignette(g2d, progress, 0.1, 0.3, width/6, height/3, 1);
+        drawVignette(g2d, progress, 0.3, 0.5, width*3/4, height/2, 2);
+        drawVignette(g2d, progress, 0.5, 0.7, width/6, height*2/3, 3);
+        drawVignette(g2d, progress, 0.7, 0.9, width*3/4, height*5/6, 4);
 
         // Restore composite
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));

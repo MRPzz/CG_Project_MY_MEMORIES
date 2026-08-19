@@ -1,13 +1,22 @@
 import java.awt.*;
-import java.awt.geom.*;
 import java.util.Random;
 
 /**
- * Scene 7: Nether Portal
- * Shows building and activating a portal, then transitions to the Nether.
+ * Scene 7: Nether Portal Activation & Journey into the Nether Dimension.
+ * Overworld: Steve lights the Obsidian frame, activating the rectangular Minecraft Nether Portal.
+ * Nether Dimension: Authentic Netherrack terrain, Glowstone clusters, lava falls,
+ * Nether fortress bridge in distance, Ghast floating, and rising flame embers.
  */
 public class NetherPortalScene extends Scene {
     private final Random random = new Random(700);
+
+    private static final int[][] FRAME_POSITIONS = {
+        {0, 0}, {1, 0}, {2, 0}, {3, 0},
+        {0, -1}, {3, -1},
+        {0, -2}, {3, -2},
+        {0, -3}, {3, -3},
+        {0, -4}, {1, -4}, {2, -4}, {3, -4}
+    };
 
     public NetherPortalScene(String name, int durationMs) {
         super(name, durationMs);
@@ -15,48 +24,42 @@ public class NetherPortalScene extends Scene {
 
     @Override
     public void render(Graphics2D g2d, int width, int height, double progress) {
+        random.setSeed(700 + (long) (progress * 100));
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int groundY = 420;
-        int bs = DrawUtils.BLOCK_SIZE;
+        int groundY = 430;
+        int bs = 24; // 24px block size for landscape detail
 
-        if (progress < 0.5) {
-            // First Half: Overworld
+        if (progress < 0.50) {
+            // ==========================================
+            // FIRST HALF: OVERWORLD
+            // ==========================================
             double overworldProgress = progress * 2.0;
 
             // Night Sky
             g2d.setColor(DrawUtils.NIGHT_SKY);
             g2d.fillRect(0, 0, width, groundY);
             DrawUtils.drawStars(g2d, width, groundY, 50, 12345, overworldProgress);
-            MidpointDrawing.fillCircle(g2d, 500, 100, 30, Color.WHITE); // Moon
+            DrawUtils.drawMinecraftMoon(g2d, 500, 90, 36);
 
             // Ground
-            DrawUtils.drawGround(g2d, width, height, groundY);
+            DrawUtils.drawGround(g2d, width, height, groundY, bs);
 
             // Portal Frame base coords
             int px = width / 2 - 2 * bs;
-            int py = groundY;
+            int py = groundY - bs;
 
-            // Obsidian portal frame (4 wide, 5 tall, hollow)
-            int[][] framePositions = {
-                {0, 0}, {1, 0}, {2, 0}, {3, 0},
-                {0, -1}, {3, -1},
-                {0, -2}, {3, -2},
-                {0, -3}, {3, -3},
-                {0, -4}, {1, -4}, {2, -4}, {3, -4}
-            };
-
-            for (int i = 0; i < framePositions.length; i++) {
-                double appearTime = i * (0.2 / framePositions.length);
+            for (int i = 0; i < FRAME_POSITIONS.length; i++) {
+                double appearTime = i * (0.2 / FRAME_POSITIONS.length);
                 if (overworldProgress > appearTime) {
-                    DrawUtils.drawBlock(g2d, px + framePositions[i][0] * bs, py + framePositions[i][1] * bs, bs, DrawUtils.OBSIDIAN);
+                    DrawUtils.drawObsidianBlock(g2d, px + FRAME_POSITIONS[i][0] * bs, py + FRAME_POSITIONS[i][1] * bs, bs);
                 }
             }
 
-            // Steve
-            DrawUtils.drawSteve(g2d, px - 3 * bs, groundY, 1, true);
+            // Steve standing and lighting the portal
+            DrawUtils.drawSteve(g2d, px - 3 * bs, groundY - 64, 1, true);
 
-            // Spark (0.2 - 0.3)
+            // Flint & Steel Spark before activation (0.4 - 0.6)
             if (overworldProgress > 0.4 && overworldProgress < 0.6) {
                 g2d.setColor(Color.YELLOW);
                 for (int i = 0; i < 5; i++) {
@@ -64,99 +67,132 @@ public class NetherPortalScene extends Scene {
                 }
             }
 
-            // Portal Activation (0.3 - 0.5 in overworld, which is 0.6 - 1.0 of local)
+            // Portal Activation (0.6 - 1.0 of overworld)
             if (overworldProgress > 0.6) {
-                int cx = px + 2 * bs;
-                int cy = py - 2 * bs;
-                int rx = bs;
-                int ry = (int) (1.5 * bs);
+                int portalW = 2 * bs;
+                int portalH = 3 * bs;
+                int portalX = px + bs;
+                int portalY = py - 3 * bs;
 
-                // Wavy animation
-                double wave = Math.sin(overworldProgress * Math.PI * 10) * 2;
-                
-                MidpointDrawing.fillEllipseGlow(g2d, cx, cy, rx + (int)wave, ry + (int)wave, DrawUtils.PORTAL_PURPLE, DrawUtils.ENDER_PURPLE);
-                
-                // Particles
+                // Draw rectangular Minecraft Nether Portal texture
+                DrawUtils.drawNetherPortalTexture(g2d, portalX, portalY, portalW, portalH, overworldProgress);
+
+                // Purple portal square particles drifting upwards
                 g2d.setColor(DrawUtils.PORTAL_PURPLE);
-                for(int i = 0; i < 10; i++) {
-                    double angle = random.nextDouble() * 2 * Math.PI + overworldProgress * 5;
-                    int r = bs + random.nextInt(bs);
-                    int x = cx + (int)(r * Math.cos(angle));
-                    int y = cy + (int)(r * Math.sin(angle));
-                    g2d.fillRect(x, y, 4, 4);
+                for (int i = 0; i < 8; i++) {
+                    int partX = portalX + random.nextInt(portalW);
+                    int partY = portalY + random.nextInt(portalH);
+                    g2d.fillRect(partX, partY, 3, 3);
                 }
             }
-            
+
             // HUD
             DrawUtils.drawHUD(g2d, width, 10, 10, 8, 40);
 
-        } else if (progress < 0.55) {
-            // Transition flash
-            double flash = (progress - 0.5) / 0.05;
-            g2d.setColor(new Color(170, 0, 255, (int)(255 * (1 - flash))));
+        } else if (progress < 0.54) {
+            // Transition flash into Nether
+            double flash = (progress - 0.50) / 0.04;
+            g2d.setColor(new Color(130, 20, 190, (int) (255 * (1.0 - flash))));
             g2d.fillRect(0, 0, width, height);
+
         } else {
-            // Second Half: Nether
-            double netherProgress = (progress - 0.55) / 0.45;
-            
-            // Background gradient
-            GradientPaint bgGradient = new GradientPaint(0, 0, DrawUtils.NETHER_RED.darker(), 0, groundY, DrawUtils.NETHER_RED);
-            g2d.setPaint(bgGradient);
-            g2d.fillRect(0, 0, width, height);
+            // ==========================================
+            // SECOND HALF: AUTHENTIC NETHER LANDSCAPE
+            // ==========================================
+            double netherProgress = (progress - 0.54) / 0.46;
 
-            // Lava ocean with sine wave
-            int lavaY = groundY + 3 * bs;
-            g2d.setColor(DrawUtils.LAVA_ORANGE);
-            for (int x = 0; x < width; x += 10) {
-                int waveY = (int) (Math.sin(x * 0.05 + netherProgress * 10) * 5);
-                g2d.fillRect(x, lavaY + waveY, 10, height - (lavaY + waveY));
+            // 1. Deep Crimson Nether Atmospheric Fog
+            for (int y = 0; y < height; y += 4) {
+                double t = (double) y / height;
+                g2d.setColor(DrawUtils.lerpColor(new Color(45, 8, 12), new Color(110, 22, 22), t));
+                g2d.fillRect(0, y, width, 4);
             }
-            MidpointDrawing.fillEllipseGlow(g2d, width/2, height, width, 100, DrawUtils.LAVA_ORANGE, Color.RED);
 
-            // Netherrack ground pieces
-            for(int i = 0; i < width / bs; i++) {
-                if (i < 5 || i > 15) {
-                    DrawUtils.drawBlock(g2d, i * bs, groundY, bs, DrawUtils.NETHER_RED.darker());
-                    DrawUtils.drawBlock(g2d, i * bs, groundY + bs, bs, DrawUtils.NETHER_RED.darker());
+            // 2. Hanging Netherrack Ceiling & Stalactites (Rows 0..3)
+            for (int col = 0; col < width / bs + 1; col++) {
+                int bx = col * bs;
+                DrawUtils.drawNetherrackBlock(g2d, bx, 0, bs);
+                DrawUtils.drawNetherrackBlock(g2d, bx, bs, bs);
+                if (col % 3 == 0 || col % 5 == 0) {
+                    DrawUtils.drawNetherrackBlock(g2d, bx, 2 * bs, bs);
                 }
             }
 
-            // Glowstone ceiling
-            for (int i = 0; i < 5; i++) {
-                int gx = 100 + i * 80;
-                DrawUtils.drawBlock(g2d, gx, 0, bs, DrawUtils.GOLD_YELLOW);
-                MidpointDrawing.fillCircleGlow(g2d, gx + bs/2, bs/2, bs*2, new Color(255,255,0,100), new Color(255,255,0,0));
+            // 3. Hanging Glowstone Clusters from Ceiling
+            int[][] glowClusters = {
+                {4, 2}, {5, 2}, {5, 3}, {12, 2}, {13, 2}, {13, 3}, {14, 2}, {20, 2}, {21, 2}
+            };
+            for (int[] gc : glowClusters) {
+                DrawUtils.drawGlowstoneBlock(g2d, gc[0] * bs, gc[1] * bs, bs);
             }
 
-            // Nether fortress in distance
-            g2d.setColor(new Color(60, 20, 20)); // dark red brick
-            g2d.fillRect(300, groundY - 4*bs, 2*bs, 5*bs);
-            g2d.fillRect(350, groundY - 6*bs, 3*bs, 7*bs);
-            g2d.fillRect(250, groundY - 5*bs, 6*bs, bs); // bridge
-
-            // Ghast floating
-            int ghastX = (int) (400 - netherProgress * 50);
-            int ghastY = 100 + (int)(Math.sin(netherProgress * 8) * 15);
-            g2d.setColor(Color.WHITE);
-            g2d.fillRect(ghastX, ghastY, 60, 60);
-            g2d.setColor(Color.RED);
-            g2d.fillRect(ghastX + 10, ghastY + 15, 8, 8); // eyes
-            g2d.fillRect(ghastX + 30, ghastY + 15, 8, 8);
-            g2d.setColor(Color.WHITE);
-            for(int i=0; i<5; i++) {
-                g2d.fillRect(ghastX + i*12, ghastY + 60, 10, 20 + (int)(Math.sin(netherProgress*10 + i)*5));
+            // 4. Cascading Lava Fall from Ceiling (Cols 17..18)
+            int lavaFallX = 17 * bs;
+            for (int y = 2 * bs; y < groundY + 2 * bs; y += bs) {
+                DrawUtils.drawLavaBlock(g2d, lavaFallX, y, bs, netherProgress * 15 + y);
             }
 
-            // Steve
-            int steveX = (int) (50 + netherProgress * 100);
-            DrawUtils.drawSteve(g2d, steveX, groundY, 1, true);
+            // 5. Nether Fortress in the Distance (Across Lava Lake)
+            int fortX = 11 * bs;
+            int fortY = groundY - 4 * bs;
+            // Fortress pillars
+            for (int r = 0; r < 6; r++) {
+                DrawUtils.drawNetherBrickBlock(g2d, fortX, fortY + r * bs, bs);
+                DrawUtils.drawNetherBrickBlock(g2d, fortX + 3 * bs, fortY + r * bs, bs);
+                DrawUtils.drawNetherBrickBlock(g2d, fortX + 7 * bs, fortY + r * bs, bs);
+            }
+            // Fortress Bridge walkway & battlements
+            for (int c = 0; c < 9; c++) {
+                DrawUtils.drawNetherBrickBlock(g2d, fortX + c * bs, fortY, bs);
+                // Battlements
+                if (c % 2 == 0) {
+                    DrawUtils.drawNetherBrickBlock(g2d, fortX + c * bs, fortY - bs, bs);
+                }
+            }
 
-            // Fire particles
-            g2d.setColor(Color.ORANGE);
-            for(int i=0; i<20; i++) {
-                int px = random.nextInt(width);
-                int py = groundY - random.nextInt(100) - (int)(netherProgress * 200 % 100);
-                g2d.fillRect(px, py, 3, 3);
+            // 6. Vast Molten Lava Ocean (Right Valley)
+            int lavaLakeY = groundY + 2 * bs;
+            for (int x = 6 * bs; x < width; x += bs) {
+                for (int y = lavaLakeY; y < height; y += bs) {
+                    DrawUtils.drawLavaBlock(g2d, x, y, bs, netherProgress * 12 + x * 0.1);
+                }
+            }
+
+            // 7. Left Netherrack Cliff & Ledge Terrain
+            for (int c = 0; c < 7; c++) {
+                int bx = c * bs;
+                for (int y = groundY; y < height; y += bs) {
+                    DrawUtils.drawNetherrackBlock(g2d, bx, y, bs);
+                }
+            }
+            // Netherrack cliff steps
+            DrawUtils.drawNetherrackBlock(g2d, 0, groundY - bs, bs);
+            DrawUtils.drawNetherrackBlock(g2d, bs, groundY - bs, bs);
+            DrawUtils.drawNetherrackBlock(g2d, 2 * bs, groundY - bs, bs);
+
+            // 8. Nether Portal frame standing on Netherrack cliff
+            int npx = bs;
+            int npy = groundY - bs;
+            for (int i = 0; i < FRAME_POSITIONS.length; i++) {
+                DrawUtils.drawObsidianBlock(g2d, npx + FRAME_POSITIONS[i][0] * bs, npy + FRAME_POSITIONS[i][1] * bs, bs);
+            }
+            DrawUtils.drawNetherPortalTexture(g2d, npx + bs, npy - 3 * bs, 2 * bs, 3 * bs, netherProgress);
+
+            // 9. Floating Ghast in Nether Sky
+            int ghastX = (int) (420 - netherProgress * 60);
+            int ghastY = 110 + (int) (Math.sin(netherProgress * 8) * 14);
+            DrawUtils.drawGhast(g2d, ghastX, ghastY, 2);
+
+            // 10. Steve stepping out of portal onto Netherrack ledge
+            int steveX = (int) (npx + 3 * bs + netherProgress * 45);
+            DrawUtils.drawSteveWithTool(g2d, steveX, groundY - 64, 1, true, "sword", 0);
+
+            // 11. Rising Flame Embers & Smoke
+            g2d.setColor(new Color(255, 120, 20, 200));
+            for (int i = 0; i < 20; i++) {
+                int fx = random.nextInt(width);
+                int fy = groundY + random.nextInt(100) - (int) ((netherProgress * 150 + i * 25) % (height - 50));
+                g2d.fillRect(fx, fy, 3, 3);
             }
 
             // HUD

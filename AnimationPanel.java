@@ -15,7 +15,7 @@ public class AnimationPanel extends JPanel implements ActionListener {
     private final List<Scene> scenes;
     private final Timer timer;
     private long startTime = -1;
-    private final int TRANSITION_DURATION = 200;
+    private final int TRANSITION_DURATION = 800;
 
     public AnimationPanel() {
         scenes = new ArrayList<>();
@@ -28,8 +28,7 @@ public class AnimationPanel extends JPanel implements ActionListener {
         scenes.add(new NetherPortalScene("NetherPortal", 5000));
         scenes.add(new BlazeFightScene("BlazeFight", 5000));
         scenes.add(new EyeOfEnderScene("EyeOfEnder", 7000));
-        scenes.add(new DragonFightScene("DragonFight", 7000));
-        scenes.add(new CreditsScene("Credits", 8000));
+        scenes.add(new DragonFightScene("DragonFight", 13000));
         timer = new Timer(16, this);
         timer.start();
     }
@@ -77,7 +76,8 @@ public class AnimationPanel extends JPanel implements ActionListener {
             
             // Draw fade overlay
             double transitionProgress = (double) (sceneElapsed - (currentScene.getDurationMs() - TRANSITION_DURATION)) / TRANSITION_DURATION;
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) transitionProgress));
+            transitionProgress = transitionProgress * transitionProgress * (3 - 2 * transitionProgress); // Smooth easing
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) Math.min(1.0, transitionProgress)));
             g2d.setColor(Color.BLACK);
             g2d.fillRect(0, 0, getWidth(), getHeight());
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
