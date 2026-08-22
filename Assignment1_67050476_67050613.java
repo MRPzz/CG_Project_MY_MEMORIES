@@ -1,5 +1,14 @@
 /*
-
+ * Assignment 1 - Computer Graphics (MY MEMORIES)
+ * Minecraft Journey Animation: From Title Screen to Defeating the Ender Dragon
+ * 
+ * Students: 67050476, 67050613
+ * 
+ * Tools: Java 2D API (java.awt, javax.swing)
+ * Algorithms: Custom Midpoint Circle, Midpoint Ellipse, Quadratic Bezier Curves
+ * Canvas: 600x600, Duration: ~58 seconds, 10 animated scenes
+ * 
+ * See references.md for full list of inspired images and external resources.
  */
 
 import java.awt.*;
@@ -340,8 +349,7 @@ public class Assignment1_67050476_67050613 {
     
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             // Day/Night cycle
             double timeOfDay = 0.0 + (progress * 0.1);
             DrawUtils.drawSky(g2d, width, height, timeOfDay);
@@ -536,8 +544,7 @@ public class Assignment1_67050476_67050613 {
     
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             // Day to Night Cycle
             double timeOfDay = 0.15 + (progress * 0.40); // 0.15 (sunset) -> 0.55 (night)
             DrawUtils.drawSky(g2d, width, height, timeOfDay);
@@ -846,8 +853,7 @@ public class Assignment1_67050476_67050613 {
     
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             // Shaft columns (Cols 13 & 14)
             int shaftCol1 = 13;
             int shaftCol2 = 14;
@@ -1079,8 +1085,7 @@ public class Assignment1_67050476_67050613 {
     
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             // Sunset sky transitioning
             double timeOfDay = 0.22 + (progress * 0.12);
             DrawUtils.drawSky(g2d, width, height, timeOfDay);
@@ -1306,8 +1311,7 @@ public class Assignment1_67050476_67050613 {
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
             random.setSeed(700 + (long) (progress * 100));
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             int groundY = 430;
             int bs = 24; // 24px block size for landscape detail
     
@@ -1516,8 +1520,7 @@ public class Assignment1_67050476_67050613 {
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
             random.setSeed(850 + (long) (progress * 100));
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             int bs = 24; // 24px block scale
             int bridgeY = 410; // Fortress bridge walkway level
     
@@ -1636,7 +1639,7 @@ public class Assignment1_67050476_67050613 {
                 DrawUtils.drawSteveWithTool(g2d, currentSteveX, steveY, 1, true, "sword", 0.6, false, 0);
     
             } else if (progress < 0.58) {
-                // Stage 3: RAPID 360-DEGREE DIAMOND SWORD FLURRY SLASH (หมุนดาบ 360 องศา)
+                // Stage 3: Rapid 360-degree diamond sword flurry slash
                 currentSteveX = steveAttackX;
                 double rapidSwing = (progress - 0.28) * Math.PI * 28; // Continuous rapid 360-degree sword spin rotations
                 DrawUtils.drawSteveWithTool(g2d, currentSteveX, steveY, 1, true, "sword", rapidSwing, false, 0);
@@ -1746,8 +1749,7 @@ public class Assignment1_67050476_67050613 {
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
             random.setSeed(999 + (long) (progress * 100));
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             int bs = 24; // 24px block scale
     
             if (progress < 0.50) {
@@ -2055,8 +2057,7 @@ public class Assignment1_67050476_67050613 {
         @Override
         public void render(Graphics2D g2d, int width, int height, double progress) {
             random.setSeed(800 + (long) (progress * 100));
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             // 1. Dark Void Sky of The End Dimension
             g2d.setColor(new Color(10, 6, 16));
             g2d.fillRect(0, 0, width, height);
@@ -2304,7 +2305,7 @@ public class Assignment1_67050476_67050613 {
                 }
             }
     
-            // 7. Ender Dragon Boss
+            // 9. Ender Dragon Boss
             if (progress < 0.95) {
                 int dx = (int) (300 + Math.sin(progress * Math.PI * 3) * 120);
                 int dy = (int) (130 + Math.cos(progress * Math.PI * 2) * 30);
@@ -2387,7 +2388,7 @@ public class Assignment1_67050476_67050613 {
                 g2d.setTransform(oldDragonTrans);
             }
     
-            // 8. Massive XP Orbs Fountain from Dragon Death (0.68 - 1.00)
+            // 10. Massive XP Orbs Fountain from Dragon Death (0.68 - 1.00)
             if (progress >= 0.68) {
                 double t = (progress - 0.68) / 0.32;
                 Random xpRand = new Random(999);
@@ -2413,7 +2414,7 @@ public class Assignment1_67050476_67050613 {
                 }
             }
     
-            // 9. Grand Victory Banners & Achievements
+            // 11. Grand Victory Banners & Achievements
             if (progress >= 0.72) {
                 DrawUtils.drawAchievement(g2d, width, "Free the End", (progress - 0.72) / 0.20);
             }
@@ -2427,7 +2428,7 @@ public class Assignment1_67050476_67050613 {
                 DrawUtils.drawMinecraftText(g2d, "Thanks for watching!", width / 2 - 100, 110, 16, new Color(220, 220, 220, bannerAlpha));
             }
     
-            // 10. HUD (XP level increases rapidly to 100 upon dragon defeat)
+            // 12. HUD (XP level increases rapidly to 100 upon dragon defeat)
             int currentXP = (progress < 0.68) ? 50 : (int) (50 + (progress - 0.68) / 0.32 * 50);
             DrawUtils.drawHUD(g2d, width, 10, 10, 8, currentXP);
         }
@@ -2647,26 +2648,19 @@ public class Assignment1_67050476_67050613 {
         public static void drawOreBlock(Graphics2D g, int x, int y, int size, String oreType) {
             drawStoneBlock(g, x, y, size);
     
-            Color mainColor = DIAMOND_BLUE;
-            Color darkColor = DIAMOND_DARK;
-            Color lightColor = Color.WHITE;
+            Color mainColor, darkColor, lightColor;
     
-            if ("iron".equalsIgnoreCase(oreType)) {
-                mainColor = IRON_GRAY;
-                darkColor = IRON_DARK;
-                lightColor = Color.WHITE;
-            } else if ("gold".equalsIgnoreCase(oreType)) {
-                mainColor = GOLD_YELLOW;
-                darkColor = GOLD_DARK;
-                lightColor = Color.WHITE;
-            } else if ("coal".equalsIgnoreCase(oreType)) {
-                mainColor = COAL_BLACK;
-                darkColor = Color.BLACK;
-                lightColor = Color.GRAY;
-            } else if ("redstone".equalsIgnoreCase(oreType)) {
-                mainColor = REDSTONE_RED;
-                darkColor = new Color(140, 15, 15);
-                lightColor = new Color(255, 130, 130);
+            switch (oreType.toLowerCase()) {
+                case "iron":
+                    mainColor = IRON_GRAY; darkColor = IRON_DARK; lightColor = Color.WHITE; break;
+                case "gold":
+                    mainColor = GOLD_YELLOW; darkColor = GOLD_DARK; lightColor = Color.WHITE; break;
+                case "coal":
+                    mainColor = COAL_BLACK; darkColor = Color.BLACK; lightColor = Color.GRAY; break;
+                case "redstone":
+                    mainColor = REDSTONE_RED; darkColor = new Color(140, 15, 15); lightColor = new Color(255, 130, 130); break;
+                default: // diamond
+                    mainColor = DIAMOND_BLUE; darkColor = DIAMOND_DARK; lightColor = Color.WHITE; break;
             }
     
             // Ore gem clusters (Minecraft pixel ore shape)
@@ -4717,9 +4711,15 @@ public class Assignment1_67050476_67050613 {
             }
         }
     
+        private static Font cachedFont = null;
+        private static int cachedFontSize = -1;
+
         public static void drawMinecraftText(Graphics2D g, String text, int x, int y, int fontSize, Color color) {
-            Font font = new Font("Monospaced", Font.BOLD, fontSize);
-            g.setFont(font);
+            if (cachedFont == null || cachedFontSize != fontSize) {
+                cachedFont = new Font("Monospaced", Font.BOLD, fontSize);
+                cachedFontSize = fontSize;
+            }
+            g.setFont(cachedFont);
             g.setColor(new Color(30, 30, 30));
             g.drawString(text, x + 2, y + 2);
             g.setColor(color);
@@ -4750,6 +4750,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         public static void drawCaveDarkness(Graphics2D g, int width, int height, int lightX, int lightY, int lightRadius) {
+            // Edge vignette darkness bands
             for (int i = 0; i < 4; i++) {
                 int alpha = 30 - i * 5;
                 if (alpha <= 0) break;
@@ -4758,6 +4759,11 @@ public class Assignment1_67050476_67050613 {
                 g.fillRect(0, height - i * 40, width, i * 40);
                 g.fillRect(0, 0, i * 40, height);
                 g.fillRect(width - i * 40, 0, i * 40, height);
+            }
+            // Radial light glow around torch/light source
+            if (lightRadius > 0) {
+                MidpointDrawing.fillCircleGlow(g, lightX, lightY, lightRadius,
+                    new Color(255, 200, 80, 25), new Color(0, 0, 0, 0));
             }
         }
     
@@ -4946,13 +4952,7 @@ public class Assignment1_67050476_67050613 {
         }
         
         private static Color lerpColor(Color a, Color b, double t) {
-            if (t < 0) t = 0;
-            if (t > 1) t = 1;
-            int red = (int) (a.getRed() + (b.getRed() - a.getRed()) * t);
-            int green = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t);
-            int blue = (int) (a.getBlue() + (b.getBlue() - a.getBlue()) * t);
-            int alpha = (int) (a.getAlpha() + (b.getAlpha() - a.getAlpha()) * t);
-            return new Color(red, green, blue, alpha);
+            return DrawUtils.lerpColor(a, b, t);
         }
     }
 
