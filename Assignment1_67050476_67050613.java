@@ -1,15 +1,3 @@
-/*
- * Assignment 1 - Computer Graphics (MY MEMORIES)
- * Minecraft Journey Animation: From Title Screen to Defeating the Ender Dragon
- * 
- * Students: 67050476, 67050613
- * 
- * Tools: Java 2D API (java.awt, javax.swing)
- * Algorithms: Custom Midpoint Circle, Midpoint Ellipse, Quadratic Bezier Curves
- * Canvas: 600x600, Duration: ~58 seconds, 10 animated scenes
- * 
- * See references.md for full list of inspired images and external resources.
- */
 
 import java.awt.*;
 import java.awt.geom.*;
