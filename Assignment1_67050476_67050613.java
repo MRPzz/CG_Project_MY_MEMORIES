@@ -1,13 +1,15 @@
 
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.*;
 import java.awt.event.*;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.Timer;
-
 public class Assignment1_67050476_67050613 {
 
     public static void main(String[] args) {
@@ -35,6 +37,7 @@ public class Assignment1_67050476_67050613 {
         private final Timer timer;
         private long startTime = -1;
         private final int TRANSITION_DURATION = 800;
+        private final PixelCanvas canvas = new PixelCanvas(600, 600);
     
         public AnimationPanel() {
             scenes = new ArrayList<>();
@@ -55,13 +58,11 @@ public class Assignment1_67050476_67050613 {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
+
             if (startTime == -1) {
                 startTime = System.currentTimeMillis();
             }
-    
+
             long elapsed = System.currentTimeMillis() - startTime;
             
             int currentSceneIndex = 0;
@@ -75,15 +76,18 @@ public class Assignment1_67050476_67050613 {
                 timeAccumulator += duration;
                 currentSceneIndex++;
             }
-    
+
+            canvas.clear(Color.BLACK);
+
             if (currentSceneIndex >= scenes.size()) {
                 // Animation finished, just render the last frame of the last scene
                 if (!scenes.isEmpty()) {
-                    scenes.get(scenes.size() - 1).render(g2d, getWidth(), getHeight(), 1.0);
+                    scenes.get(scenes.size() - 1).render(canvas, getWidth(), getHeight(), 1.0);
                 }
+                g.drawImage(canvas.getBufferedImage(), 0, 0, null);
                 return;
             }
-    
+
             Scene currentScene = scenes.get(currentSceneIndex);
             long sceneElapsed = elapsed - timeAccumulator;
             double progress = (double) sceneElapsed / currentScene.getDurationMs();
@@ -91,20 +95,23 @@ public class Assignment1_67050476_67050613 {
             // Check for transition
             if (sceneElapsed > currentScene.getDurationMs() - TRANSITION_DURATION && currentSceneIndex < scenes.size() - 1) {
                 // Draw current scene
-                currentScene.render(g2d, getWidth(), getHeight(), progress);
+                currentScene.render(canvas, getWidth(), getHeight(), progress);
                 
                 // Draw fade overlay
                 double transitionProgress = (double) (sceneElapsed - (currentScene.getDurationMs() - TRANSITION_DURATION)) / TRANSITION_DURATION;
                 transitionProgress = transitionProgress * transitionProgress * (3 - 2 * transitionProgress); // Smooth easing
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) Math.min(1.0, transitionProgress)));
-                g2d.setColor(Color.BLACK);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                canvas.setAlpha((float) Math.min(1.0, transitionProgress));
+                canvas.setColor(Color.BLACK);
+                canvas.fillRect(0, 0, getWidth(), getHeight());
+                canvas.setAlpha(1.0f);
             } else {
-                currentScene.render(g2d, getWidth(), getHeight(), progress);
+                currentScene.render(canvas, getWidth(), getHeight(), progress);
             }
+
+            // Draw final custom raster buffer onto panel
+            g.drawImage(canvas.getBufferedImage(), 0, 0, null);
         }
-    
+
         @Override
         public void actionPerformed(ActionEvent e) {
             repaint();
@@ -142,7 +149,7 @@ public class Assignment1_67050476_67050613 {
          * @param height Height of the canvas.
          * @param progress Progress of the scene from 0.0 to 1.0.
          */
-        public abstract void render(Graphics2D g2d, int width, int height, double progress);
+        public abstract void render(PixelCanvas g2d, int width, int height, double progress);
     }
 
     // =========================================================================
@@ -156,7 +163,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             // Gradient background
             for (int i = 0; i < height; i += 5) {
                 double t = (double) i / height;
@@ -186,7 +193,7 @@ public class Assignment1_67050476_67050613 {
     
             // Title text floating
             int titleY = 150 + (int) (Math.sin(progress * Math.PI * 4) * 10);
-            DrawUtils.drawMinecraftText(g2d, "MINECRAFT", 150, titleY, 56, DrawUtils.GOLD_YELLOW);
+            DrawUtils.drawMinecraftText(g2d, "MINECRAFT", 111, titleY, 56, DrawUtils.GOLD_YELLOW);
     
             // Splash text rotating
             java.awt.geom.AffineTransform old = g2d.getTransform();
@@ -239,7 +246,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             // Dark gray background
             g2d.setColor(Color.DARK_GRAY);
             g2d.fillRect(0, 0, width, height);
@@ -257,7 +264,7 @@ public class Assignment1_67050476_67050613 {
     
             if (progress < 0.55) {
                 // UI Phase
-                DrawUtils.drawMinecraftText(g2d, "Create New World", 180, 50, 24, Color.WHITE);
+                DrawUtils.drawMinecraftText(g2d, "Create New World", 156, 45, 24, Color.WHITE);
                 
                 // World name text field
                 g2d.setColor(Color.BLACK);
@@ -269,7 +276,7 @@ public class Assignment1_67050476_67050613 {
                 int charsToShow = (int) Math.min(fullText.length(), (progress / 0.4) * fullText.length());
                 String currentText = fullText.substring(0, charsToShow);
                 
-                DrawUtils.drawMinecraftText(g2d, currentText + (progress % 0.1 < 0.05 && progress < 0.4 ? "_" : ""), 160, 105, 16, Color.WHITE);
+                DrawUtils.drawMinecraftText(g2d, currentText + (progress % 0.1 < 0.05 && progress < 0.4 ? "_" : ""), 160, 93, 16, Color.WHITE);
                 
                 int btnW = 300;
                 int btnH = 40;
@@ -294,7 +301,7 @@ public class Assignment1_67050476_67050613 {
                 double loadProgress = (progress - 0.55) / 0.4; // 0.55 to 0.95
                 if (loadProgress > 1.0) loadProgress = 1.0;
     
-                DrawUtils.drawMinecraftText(g2d, "Building terrain...", 220, 250, 18, Color.WHITE);
+                DrawUtils.drawMinecraftText(g2d, "Building terrain...", 196, 250, 18, Color.WHITE);
     
                 // Progress bar
                 int barW = 400;
@@ -307,7 +314,9 @@ public class Assignment1_67050476_67050613 {
                 g2d.setColor(DrawUtils.XP_GREEN);
                 g2d.fillRect(barX, barY, (int) (barW * loadProgress), barH);
     
-                DrawUtils.drawMinecraftText(g2d, (int) (loadProgress * 100) + "%", 280, 350, 18, Color.WHITE);
+                String pctStr = (int) (loadProgress * 100) + "%";
+                int pctW = pctStr.length() * 12;
+                DrawUtils.drawMinecraftText(g2d, pctStr, width / 2 - pctW / 2, 350, 18, Color.WHITE);
             }
     
             // Fade out at the very end
@@ -336,7 +345,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
 
             // Day/Night cycle
             double timeOfDay = 0.0 + (progress * 0.1);
@@ -531,7 +540,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
 
             // Day to Night Cycle
             double timeOfDay = 0.15 + (progress * 0.40); // 0.15 (sunset) -> 0.55 (night)
@@ -840,7 +849,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
 
             // Shaft columns (Cols 13 & 14)
             int shaftCol1 = 13;
@@ -1072,7 +1081,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
 
             // Sunset sky transitioning
             double timeOfDay = 0.22 + (progress * 0.12);
@@ -1297,7 +1306,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             random.setSeed(700 + (long) (progress * 100));
 
             int groundY = 430;
@@ -1506,7 +1515,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             random.setSeed(850 + (long) (progress * 100));
 
             int bs = 24; // 24px block scale
@@ -1632,17 +1641,18 @@ public class Assignment1_67050476_67050613 {
                 double rapidSwing = (progress - 0.28) * Math.PI * 28; // Continuous rapid 360-degree sword spin rotations
                 DrawUtils.drawSteveWithTool(g2d, currentSteveX, steveY, 1, true, "sword", rapidSwing, false, 0);
     
-                // Diamond Blue & White Slash Arcs (Swoosh effect)
+                // Diamond Blue & White Slash Arcs (Bézier Curve Algorithm Swoosh Effect)
                 int slashCX = blazeX - 10;
                 int slashCY = blazeY + 15;
                 double slashAngle = progress * 40;
-                g2d.setColor(new Color(120, 240, 255, 220));
-                g2d.setStroke(new BasicStroke(3.0f));
                 int arcOffset = (int) (Math.sin(slashAngle) * 20);
-                g2d.drawLine(slashCX - 15, slashCY + arcOffset, slashCX + 25, slashCY - arcOffset);
+                g2d.setColor(new Color(120, 240, 255, 220));
+                g2d.setStrokeWidth(3.0f);
+                g2d.drawBezierQuadratic(slashCX - 25, slashCY + arcOffset, slashCX, slashCY - arcOffset - 15, slashCX + 25, slashCY + arcOffset, 16);
                 g2d.setColor(Color.WHITE);
-                g2d.drawLine(slashCX - 10, slashCY + arcOffset - 2, slashCX + 20, slashCY - arcOffset - 2);
-                g2d.setStroke(new BasicStroke(1.0f));
+                g2d.setStrokeWidth(1.5f);
+                g2d.drawBezierQuadratic(slashCX - 20, slashCY + arcOffset - 2, slashCX, slashCY - arcOffset - 17, slashCX + 20, slashCY + arcOffset - 2, 16);
+                g2d.setStrokeWidth(1.0f);
     
                 // Critical Hit Star Sparks
                 Random critRand = new Random((long) (progress * 500));
@@ -1735,7 +1745,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             random.setSeed(999 + (long) (progress * 100));
 
             int bs = 24; // 24px block scale
@@ -1875,6 +1885,10 @@ public class Assignment1_67050476_67050613 {
                     int eyeX = steveX + 24 + (int) (eyeT * 290);
                     // Parabolic flight arc high over the village rooftops
                     int eyeY = (groundY - 50) - (int) (Math.sin(eyeT * Math.PI) * 190) - (int) (eyeT * 30);
+                    
+                    // Trajectory flight guide curve (Bézier Curve Algorithm)
+                    g2d.setColor(new Color(25, 200, 160, 60));
+                    g2d.drawBezierQuadratic(steveX + 24, groundY - 50, steveX + 160, groundY - 260, steveX + 314, groundY - 80, 24);
     
                     // Draw Eye of Ender Pearl (Teal pearl with black slit pupil)
                     g2d.setColor(new Color(20, 150, 120));
@@ -2043,7 +2057,7 @@ public class Assignment1_67050476_67050613 {
         }
     
         @Override
-        public void render(Graphics2D g2d, int width, int height, double progress) {
+        public void render(PixelCanvas g2d, int width, int height, double progress) {
             random.setSeed(800 + (long) (progress * 100));
 
             // 1. Dark Void Sky of The End Dimension
@@ -2356,22 +2370,11 @@ public class Assignment1_67050476_67050613 {
                     g2d.setColor(DrawUtils.ENDER_PURPLE);
                     g2d.fillRect(58, -8, 4, 4);
     
-                    // Flapping Dragon Wings
+                    // Flapping Dragon Wings (Bézier Curve Algorithm & Scanline Polygon Fill)
                     double flap = Math.sin(progress * Math.PI * 18) * 28;
-                    GeneralPath wing1 = new GeneralPath();
-                    wing1.moveTo(-12, -10);
-                    wing1.quadTo(0, -36 - flap, 36, -18 - flap / 2);
-                    wing1.quadTo(10, -10, 12, -10);
-                    wing1.closePath();
                     g2d.setColor(dragonColor);
-                    g2d.fill(wing1);
-    
-                    GeneralPath wing2 = new GeneralPath();
-                    wing2.moveTo(-12, 10);
-                    wing2.quadTo(0, 36 + flap, 36, 18 + flap / 2);
-                    wing2.quadTo(10, 10, 12, 10);
-                    wing2.closePath();
-                    g2d.fill(wing2);
+                    g2d.fillBezierWing(-12, -10, 0, -36 - flap, 36, -18 - flap / 2, 10, -10);
+                    g2d.fillBezierWing(-12, 10, 0, 36 + flap, 36, 18 + flap / 2, 10, 10);
                 }
                 g2d.setTransform(oldDragonTrans);
             }
@@ -2412,8 +2415,8 @@ public class Assignment1_67050476_67050613 {
                 double bannerP = Math.min(1.0, (progress - 0.82) / 0.08);
                 int bannerAlpha = (int) (bannerP * 255);
                 g2d.setColor(new Color(255, 215, 0, bannerAlpha));
-                DrawUtils.drawMinecraftText(g2d, "THE END - VICTORY ACHIEVED!", width / 2 - 180, 80, 20, new Color(255, 215, 0, bannerAlpha));
-                DrawUtils.drawMinecraftText(g2d, "Thanks for watching!", width / 2 - 100, 110, 16, new Color(220, 220, 220, bannerAlpha));
+                DrawUtils.drawMinecraftText(g2d, "THE END - VICTORY ACHIEVED!", width / 2 - (27 * 12) / 2, 80, 20, new Color(255, 215, 0, bannerAlpha));
+                DrawUtils.drawMinecraftText(g2d, "Thanks for watching!", width / 2 - (20 * 12) / 2, 110, 16, new Color(220, 220, 220, bannerAlpha));
             }
     
             // 12. HUD (XP level increases rapidly to 100 upon dragon defeat)
@@ -2497,7 +2500,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Generic block with 3D bevel.
          */
-        public static void drawBlock(Graphics2D g, int x, int y, int size, Color color) {
+        public static void drawBlock(PixelCanvas g, int x, int y, int size, Color color) {
             g.setColor(color);
             g.fillRect(x, y, size, size);
     
@@ -2517,7 +2520,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Grass Block with dirt body and jagged grass top.
          */
-        public static void drawGrassBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawGrassBlock(PixelCanvas g, int x, int y, int size) {
             // Dirt base
             drawDirtBlock(g, x, y, size);
     
@@ -2547,7 +2550,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Dirt Block with pixel noise texture (Proportionally scaled).
          */
-        public static void drawDirtBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawDirtBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(DIRT_BROWN);
             g.fillRect(x, y, size, size);
     
@@ -2577,7 +2580,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Stone Block with speckled pixel noise.
          */
-        public static void drawStoneBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawStoneBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(STONE_GRAY);
             g.fillRect(x, y, size, size);
     
@@ -2605,7 +2608,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Cobblestone Block.
          */
-        public static void drawCobblestoneBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawCobblestoneBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(STONE_GRAY);
             g.fillRect(x, y, size, size);
     
@@ -2633,7 +2636,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Ore Block (Diamond, Iron, Gold, Coal, Redstone).
          */
-        public static void drawOreBlock(Graphics2D g, int x, int y, int size, String oreType) {
+        public static void drawOreBlock(PixelCanvas g, int x, int y, int size, String oreType) {
             drawStoneBlock(g, x, y, size);
     
             Color mainColor, darkColor, lightColor;
@@ -2672,7 +2675,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Oak Log.
          */
-        public static void drawOakLog(Graphics2D g, int x, int y, int size) {
+        public static void drawOakLog(PixelCanvas g, int x, int y, int size) {
             g.setColor(LOG_SIDE);
             g.fillRect(x, y, size, size);
     
@@ -2693,7 +2696,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Oak Leaves.
          */
-        public static void drawLeavesBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawLeavesBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(LEAVES_GREEN);
             g.fillRect(x, y, size, size);
     
@@ -2717,7 +2720,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Oak Planks Block with horizontal boards, nail rivets, and woodgrain.
          */
-        public static void drawOakPlankBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawOakPlankBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(160, 115, 68)); // Oak plank base
             g.fillRect(x, y, size, size);
     
@@ -2756,7 +2759,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Glass Block with light-cyan border and diagonal glare streaks.
          */
-        public static void drawGlassBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawGlassBlock(PixelCanvas g, int x, int y, int size) {
             double u = size / 16.0;
     
             // Semi-transparent inner pane
@@ -2788,7 +2791,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Farmland Block (Tilled soil).
          */
-        public static void drawFarmlandBlock(Graphics2D g, int x, int y, int size, boolean isMoist) {
+        public static void drawFarmlandBlock(PixelCanvas g, int x, int y, int size, boolean isMoist) {
             Color baseSoil = isMoist ? new Color(75, 48, 28) : new Color(115, 80, 48);
             g.setColor(baseSoil);
             g.fillRect(x, y, size, size);
@@ -2814,7 +2817,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Chest Block.
          */
-        public static void drawChestBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawChestBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(160, 110, 55)); // Warm oak chest base
             g.fillRect(x, y, size, size);
     
@@ -2835,7 +2838,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Furnace Block (Lit or Unlit).
          */
-        public static void drawFurnaceBlock(Graphics2D g, int x, int y, int size, boolean isLit) {
+        public static void drawFurnaceBlock(PixelCanvas g, int x, int y, int size, boolean isLit) {
             drawCobblestoneBlock(g, x, y, size);
     
             double u = size / 16.0;
@@ -2861,7 +2864,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Stone Brick Block (0=Normal, 1=Mossy, 2=Cracked).
          */
-        public static void drawStoneBrickBlock(Graphics2D g, int x, int y, int size, int variant) {
+        public static void drawStoneBrickBlock(PixelCanvas g, int x, int y, int size, int variant) {
             g.setColor(new Color(125, 125, 125)); // Stone gray
             g.fillRect(x, y, size, size);
     
@@ -2902,7 +2905,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft End Portal Frame Block.
          */
-        public static void drawEndPortalFrame(Graphics2D g, int x, int y, int size, boolean hasEye) {
+        public static void drawEndPortalFrame(PixelCanvas g, int x, int y, int size, boolean hasEye) {
             // End stone/green sandstone frame base
             g.setColor(new Color(75, 110, 92));
             g.fillRect(x, y, size, size);
@@ -2939,7 +2942,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft End Stone Block.
          */
-        public static void drawEndStoneBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawEndStoneBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(222, 222, 168)); // Pale yellow-gray base
             g.fillRect(x, y, size, size);
     
@@ -2967,7 +2970,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Bedrock Block.
          */
-        public static void drawBedrockBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawBedrockBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(35, 35, 35)); // Charcoal base
             g.fillRect(x, y, size, size);
     
@@ -2992,7 +2995,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Cosmic End Portal Starry Void.
          */
-        public static void drawEndPortalPlane(Graphics2D g, int x, int y, int width, int height, double time) {
+        public static void drawEndPortalPlane(PixelCanvas g, int x, int y, int width, int height, double time) {
             // Pure pitch-black void base
             g.setColor(new Color(8, 6, 14));
             g.fillRect(x, y, width, height);
@@ -3026,7 +3029,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Obsidian Block.
          */
-        public static void drawObsidianBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawObsidianBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(OBSIDIAN);
             g.fillRect(x, y, size, size);
     
@@ -3048,7 +3051,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Netherrack Block.
          */
-        public static void drawNetherrackBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawNetherrackBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(112, 34, 34)); // Blood-red base
             g.fillRect(x, y, size, size);
     
@@ -3081,7 +3084,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Nether Brick Block.
          */
-        public static void drawNetherBrickBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawNetherBrickBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(48, 22, 26)); // Dark maroon brick base
             g.fillRect(x, y, size, size);
     
@@ -3108,7 +3111,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Glowstone Block.
          */
-        public static void drawGlowstoneBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawGlowstoneBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(215, 155, 45)); // Gold crystal base
             g.fillRect(x, y, size, size);
     
@@ -3139,7 +3142,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Molten Lava Block.
          */
-        public static void drawLavaBlock(Graphics2D g, int x, int y, int size, double wave) {
+        public static void drawLavaBlock(PixelCanvas g, int x, int y, int size, double wave) {
             g.setColor(new Color(230, 95, 15)); // Molten orange base
             g.fillRect(x, y, size, size);
     
@@ -3160,7 +3163,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Crafting Table with authentic 3x3 grid top, saw and hammer side motifs.
          */
-        public static void drawCraftingTable(Graphics2D g, int x, int y, int size) {
+        public static void drawCraftingTable(PixelCanvas g, int x, int y, int size) {
             double u = size / 16.0;
     
             // Oak wood base
@@ -3205,7 +3208,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Wall Torch.
          */
-        public static void drawTorch(Graphics2D g, int x, int y) {
+        public static void drawTorch(PixelCanvas g, int x, int y) {
             // Wooden stick
             g.setColor(new Color(110, 85, 50));
             g.fillRect(x + 2, y + 4, 4, 12);
@@ -3228,7 +3231,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Wooden Door (Closed or Open).
          */
-        public static void drawWoodenDoor(Graphics2D g, int x, int y, int width, int height, boolean isOpen) {
+        public static void drawWoodenDoor(PixelCanvas g, int x, int y, int width, int height, boolean isOpen) {
             if (!isOpen) {
                 // Closed door: full front view
                 g.setColor(new Color(135, 95, 52));
@@ -3262,7 +3265,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Water Block.
          */
-        public static void drawWaterBlock(Graphics2D g, int x, int y, int size, double wave) {
+        public static void drawWaterBlock(PixelCanvas g, int x, int y, int size, double wave) {
             g.setColor(WATER_BLUE);
             g.fillRect(x, y, size, size);
     
@@ -3277,7 +3280,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Nether Portal swirling rectangular texture.
          */
-        public static void drawNetherPortalTexture(Graphics2D g, int x, int y, int width, int height, double time) {
+        public static void drawNetherPortalTexture(PixelCanvas g, int x, int y, int width, int height, double time) {
             // Base dark purple plane
             g.setColor(new Color(85, 20, 140, 230));
             g.fillRect(x, y, width, height);
@@ -3327,21 +3330,21 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Steve with pixel-art detail (Brisk natural walk).
          */
-        public static void drawSteve(Graphics2D g, int x, int y, int scale, boolean facingRight) {
+        public static void drawSteve(PixelCanvas g, int x, int y, int scale, boolean facingRight) {
             drawSteveWithTool(g, x, y, scale, facingRight, "hand", 0);
         }
     
         /**
          * Steve standing completely still with straight legs.
          */
-        public static void drawSteveStanding(Graphics2D g, int x, int y, int scale, boolean facingRight) {
+        public static void drawSteveStanding(PixelCanvas g, int x, int y, int scale, boolean facingRight) {
             drawSteveWithTool(g, x, y, scale, facingRight, "hand", 0, false, 0);
         }
     
         /**
          * Authentic Minecraft Steve holding a tool.
          */
-        public static void drawSteveWithTool(Graphics2D g, int x, int y, int scale, boolean facingRight, String tool, double overrideSwing) {
+        public static void drawSteveWithTool(PixelCanvas g, int x, int y, int scale, boolean facingRight, String tool, double overrideSwing) {
             boolean isWalking = (overrideSwing == 0);
             drawSteveWithTool(g, x, y, scale, facingRight, tool, overrideSwing, isWalking, x * 0.28);
         }
@@ -3349,7 +3352,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Fully controlled Steve renderer.
          */
-        public static void drawSteveWithTool(Graphics2D g, int x, int y, int scale, boolean facingRight, String tool, double overrideSwing, boolean isWalking, double walkPhase) {
+        public static void drawSteveWithTool(PixelCanvas g, int x, int y, int scale, boolean facingRight, String tool, double overrideSwing, boolean isWalking, double walkPhase) {
             int px = 2 * scale; // 1 pixel = 2*scale screen pixels
             double legSwing = isWalking ? Math.sin(walkPhase) * 0.55 : 0;
             if (!facingRight) legSwing = -legSwing;
@@ -3566,7 +3569,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Zombie.
          */
-        public static void drawZombie(Graphics2D g, int x, int y, int scale, double progress) {
+        public static void drawZombie(PixelCanvas g, int x, int y, int scale, double progress) {
             int px = 2 * scale;
             double swingAngle = Math.sin(progress * 10) * 0.25;
     
@@ -3609,7 +3612,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Creeper with camouflage pixel mosaic.
          */
-        public static void drawCreeper(Graphics2D g, int x, int y, int scale) {
+        public static void drawCreeper(PixelCanvas g, int x, int y, int scale) {
             int px = 2 * scale;
             double swing = Math.sin(x * 0.1) * 0.25;
     
@@ -3659,7 +3662,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Ghast.
          */
-        public static void drawGhast(Graphics2D g, int x, int y, int scale) {
+        public static void drawGhast(PixelCanvas g, int x, int y, int scale) {
             int px = 2 * scale;
     
             // Cubic Head / Body (16x16)
@@ -3692,7 +3695,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Blaze with spinning cubic rods.
          */
-        public static void drawBlaze(Graphics2D g, int x, int y, int scale, double progress) {
+        public static void drawBlaze(PixelCanvas g, int x, int y, int scale, double progress) {
             int px = 2 * scale;
     
             // Head (8x8)
@@ -3728,7 +3731,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Pig (Pink, 4-legged).
          */
-        public static void drawPig(Graphics2D g, int x, int y, int scale, boolean facingRight) {
+        public static void drawPig(PixelCanvas g, int x, int y, int scale, boolean facingRight) {
             int px = 2 * scale;
             Color pigPink = new Color(230, 150, 150);
             Color pigDark = new Color(195, 115, 115);
@@ -3766,7 +3769,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Tamed Minecraft Wolf/Dog with red collar.
          */
-        public static void drawTamedWolf(Graphics2D g, int x, int y, int scale, double tailWag) {
+        public static void drawTamedWolf(PixelCanvas g, int x, int y, int scale, double tailWag) {
             int px = 2 * scale;
             Color fur = new Color(220, 220, 220);
             Color furDark = new Color(175, 175, 175);
@@ -3811,7 +3814,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Minecraft Bat with flapping wings.
          */
-        public static void drawBat(Graphics2D g, int x, int y, double wingPhase) {
+        public static void drawBat(PixelCanvas g, int x, int y, double wingPhase) {
             // Body
             g.setColor(new Color(50, 35, 25));
             g.fillRect(x, y, 4, 6);
@@ -3837,7 +3840,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Enderman (Tall, slim, purple eyes, optionally holding block).
          */
-        public static void drawEnderman(Graphics2D g, int x, int y, int scale, boolean hasBlock) {
+        public static void drawEnderman(PixelCanvas g, int x, int y, int scale, boolean hasBlock) {
             int px = 2 * scale;
     
             // Long thin legs
@@ -3871,7 +3874,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Minecraft-style white mouse cursor (pointer arrow).
          */
-        public static void drawMinecraftCursor(Graphics2D g, int x, int y) {
+        public static void drawMinecraftCursor(PixelCanvas g, int x, int y) {
             // White filled arrow
             g.setColor(Color.WHITE);
             int[] xPts = {x, x, x + 4, x + 6, x + 8, x + 5, x + 10};
@@ -3885,7 +3888,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Hay Bale Block (Dried yellow straw with red cinch bands).
          */
-        public static void drawHayBaleBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawHayBaleBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(215, 175, 55)); // Dried golden straw base
             g.fillRect(x, y, size, size);
     
@@ -3913,11 +3916,11 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Villager (Brown robe, folded arms, hanging nose, profession hats).
          */
-        public static void drawVillager(Graphics2D g, int x, int y, int scale, boolean facingRight) {
+        public static void drawVillager(PixelCanvas g, int x, int y, int scale, boolean facingRight) {
             drawVillager(g, x, y, scale, facingRight, "plains");
         }
     
-        public static void drawVillager(Graphics2D g, int x, int y, int scale, boolean facingRight, String profession) {
+        public static void drawVillager(PixelCanvas g, int x, int y, int scale, boolean facingRight, String profession) {
             int px = 2 * scale;
             Color skinColor = new Color(198, 142, 110);
             Color robeBrown = new Color(140, 85, 45);
@@ -4002,11 +4005,11 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Iron Golem (Heavy iron plates, vines, red eyes, holding poppy).
          */
-        public static void drawIronGolem(Graphics2D g, int x, int y, int scale) {
+        public static void drawIronGolem(PixelCanvas g, int x, int y, int scale) {
             drawIronGolem(g, x, y, scale, true);
         }
     
-        public static void drawIronGolem(Graphics2D g, int x, int y, int scale, boolean holdingPoppy) {
+        public static void drawIronGolem(PixelCanvas g, int x, int y, int scale, boolean holdingPoppy) {
             int px = 2 * scale;
             Color ironBody = new Color(225, 220, 215);
             Color ironShade = new Color(175, 170, 165);
@@ -4089,7 +4092,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Blocky Minecraft Ender Dragon.
          */
-        public static void drawDragon(Graphics2D g, int x, int y, int scale, double progress) {
+        public static void drawDragon(PixelCanvas g, int x, int y, int scale, double progress) {
             int px = 2 * scale;
             AffineTransform old = g.getTransform();
             g.translate(x, y);
@@ -4154,7 +4157,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Blocky Minecraft Oak Tree.
          */
-        public static void drawTree(Graphics2D g, int x, int y, int scale) {
+        public static void drawTree(PixelCanvas g, int x, int y, int scale) {
             int bs = 8 * scale;
     
             // Wood Trunk (3 blocks high)
@@ -4176,7 +4179,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Blocky Pixel Clouds.
          */
-        public static void drawCloud(Graphics2D g, int x, int y, int cloudWidth) {
+        public static void drawCloud(PixelCanvas g, int x, int y, int cloudWidth) {
             g.setColor(new Color(255, 255, 255, 220));
             // Stepped rectangular pixel cloud shape
             int h = 14;
@@ -4192,7 +4195,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Square Sun.
          */
-        public static void drawMinecraftSun(Graphics2D g, int x, int y, int size) {
+        public static void drawMinecraftSun(PixelCanvas g, int x, int y, int size) {
             // Radiant halo (using Midpoint Circle Glow per custom algorithm rule)
             MidpointDrawing.fillCircleGlow(g, x + size / 2, y + size / 2, size + 15,
                 new Color(255, 240, 150, 60), new Color(255, 200, 50, 0));
@@ -4207,7 +4210,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Square Moon.
          */
-        public static void drawMinecraftMoon(Graphics2D g, int x, int y, int size) {
+        public static void drawMinecraftMoon(PixelCanvas g, int x, int y, int size) {
             // Radiant moonlight halo
             MidpointDrawing.fillCircleGlow(g, x + size / 2, y + size / 2, size + 12,
                 new Color(220, 230, 255, 45), new Color(150, 180, 255, 0));
@@ -4226,7 +4229,7 @@ public class Assignment1_67050476_67050613 {
         // UI & UTILITIES
         // ==========================================
     
-        public static void drawHUD(Graphics2D g, int width, int hearts, int maxHearts, int hunger, int xpPercent) {
+        public static void drawHUD(PixelCanvas g, int width, int hearts, int maxHearts, int hunger, int xpPercent) {
             for (int i = 0; i < maxHearts; i++) {
                 int hx = 10 + i * 15;
                 int hy = 10;
@@ -4286,7 +4289,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft GUI Button (Normal, Hover, Pressed).
          */
-        public static void drawMinecraftButton(Graphics2D g, int x, int y, int width, int height, String text, int state) {
+        public static void drawMinecraftButton(PixelCanvas g, int x, int y, int width, int height, String text, int state) {
             // state: 0 = Normal, 1 = Hover, 2 = Pressed
             Color baseColor = (state == 2) ? new Color(90, 90, 90) : (state == 1 ? new Color(175, 175, 175) : new Color(130, 130, 130));
             Color highlight = (state == 2) ? new Color(60, 60, 60) : (state == 1 ? new Color(220, 220, 220) : new Color(190, 190, 190));
@@ -4310,15 +4313,17 @@ public class Assignment1_67050476_67050613 {
             g.fillRect(x + 2, y + height - 2, width - 2, 2);
             g.fillRect(x + width - 2, y + 2, 2, height - 2);
     
-            // Centered Text with shadow
-            int textY = y + height / 2 + 5;
+            // Perfectly centered text
+            int scale = Math.max(1, 16 / 8);
+            int textW = text.length() * 6 * scale;
+            int textX = x + (width - textW) / 2;
+            int textY = y + (height - 7 * scale) / 2;
             if (state == 2) textY += 1;
             Color textColor = (state == 1) ? new Color(255, 255, 160) : Color.WHITE;
-            int textX = x + width / 2 - (text.length() * 4);
             drawMinecraftText(g, text, textX, textY, 16, textColor);
         }
     
-        public static void drawAchievement(Graphics2D g, int width, String title, double popupProgress) {
+        public static void drawAchievement(PixelCanvas g, int width, String title, double popupProgress) {
             if (popupProgress <= 0 || popupProgress >= 1) return;
     
             int yOffset;
@@ -4342,8 +4347,8 @@ public class Assignment1_67050476_67050613 {
             g.drawRect(x, yOffset, w, h);
             g.drawRect(x + 1, yOffset + 1, w - 2, h - 2);
     
-            drawMinecraftText(g, "Achievement Get!", x + 10, yOffset + 16, 12, GOLD_YELLOW);
-            drawMinecraftText(g, title, x + 10, yOffset + 32, 14, Color.WHITE);
+            drawMinecraftText(g, "Achievement Get!", x + 12, yOffset + 8, 12, GOLD_YELLOW);
+            drawMinecraftText(g, title, x + 12, yOffset + 22, 14, Color.WHITE);
         }
     
         public static Color lerpColor(Color a, Color b, double t) {
@@ -4356,7 +4361,7 @@ public class Assignment1_67050476_67050613 {
             return new Color(red, green, blue, alpha);
         }
     
-        public static void drawSky(Graphics2D g, int width, int height, double timeOfDay) {
+        public static void drawSky(PixelCanvas g, int width, int height, double timeOfDay) {
             Color topColor, bottomColor;
             if (timeOfDay < 0.2) {
                 topColor = SKY_BLUE;
@@ -4386,11 +4391,11 @@ public class Assignment1_67050476_67050613 {
             }
         }
     
-        public static void drawGround(Graphics2D g, int width, int height, int groundY) {
+        public static void drawGround(PixelCanvas g, int width, int height, int groundY) {
             drawGround(g, width, height, groundY, BLOCK_SIZE);
         }
     
-        public static void drawGround(Graphics2D g, int width, int height, int groundY, int blockSize) {
+        public static void drawGround(PixelCanvas g, int width, int height, int groundY, int blockSize) {
             for (int x = 0; x < width; x += blockSize) {
                 drawGrassBlock(g, x, groundY, blockSize);
                 for (int y = groundY + blockSize; y < height; y += blockSize) {
@@ -4402,7 +4407,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Snow Block (Pure white with subtle icy-blue/gray pixel noise).
          */
-        public static void drawSnowBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawSnowBlock(PixelCanvas g, int x, int y, int size) {
             g.setColor(new Color(245, 250, 255)); // Pure white snow base
             g.fillRect(x, y, size, size);
     
@@ -4427,7 +4432,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Snow-Covered Grass Block (Snow top with icicle fringes hanging over dirt).
          */
-        public static void drawSnowyGrassBlock(Graphics2D g, int x, int y, int size) {
+        public static void drawSnowyGrassBlock(PixelCanvas g, int x, int y, int size) {
             // Dirt base
             drawDirtBlock(g, x, y, size);
     
@@ -4456,7 +4461,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Overworld Distant Mountains Backdrop (Vast Horizon with Atmospheric Depth Fog).
          */
-        public static void drawDistantMountains(Graphics2D g, int width, int groundY, double timeOfDay, double scrollOffset) {
+        public static void drawDistantMountains(PixelCanvas g, int width, int groundY, double timeOfDay, double scrollOffset) {
             // Atmospheric Sky Fog Color based on time of day
             Color skyFog;
             if (timeOfDay < 0.2) {
@@ -4587,7 +4592,7 @@ public class Assignment1_67050476_67050613 {
         /**
          * Authentic Minecraft Snowy Mountain Peaks & Slopes (Distant Horizon with Ice Mist).
          */
-        public static void drawSnowyMountains(Graphics2D g, int width, int groundY, double scrollOffset) {
+        public static void drawSnowyMountains(PixelCanvas g, int width, int groundY, double scrollOffset) {
             Color skyFog = new Color(185, 220, 245); // Cold crisp alpine sky fog
     
             // =========================================================================
@@ -4699,22 +4704,11 @@ public class Assignment1_67050476_67050613 {
             }
         }
     
-        private static Font cachedFont = null;
-        private static int cachedFontSize = -1;
-
-        public static void drawMinecraftText(Graphics2D g, String text, int x, int y, int fontSize, Color color) {
-            if (cachedFont == null || cachedFontSize != fontSize) {
-                cachedFont = new Font("Monospaced", Font.BOLD, fontSize);
-                cachedFontSize = fontSize;
-            }
-            g.setFont(cachedFont);
-            g.setColor(new Color(30, 30, 30));
-            g.drawString(text, x + 2, y + 2);
-            g.setColor(color);
-            g.drawString(text, x, y);
+        public static void drawMinecraftText(PixelCanvas g, String text, int x, int y, int fontSize, Color color) {
+            g.drawMinecraftText(text, x, y, fontSize, color);
         }
     
-        public static void drawStars(Graphics2D g, int width, int height, int count, long seed, double twinkle) {
+        public static void drawStars(PixelCanvas g, int width, int height, int count, long seed, double twinkle) {
             Random rand = new Random(seed);
             for (int i = 0; i < count; i++) {
                 int x = rand.nextInt(width);
@@ -4732,12 +4726,12 @@ public class Assignment1_67050476_67050613 {
             return t * t * (3 - 2 * t);
         }
     
-        public static void drawTorchLight(Graphics2D g, int x, int y, int radius) {
+        public static void drawTorchLight(PixelCanvas g, int x, int y, int radius) {
             MidpointDrawing.fillCircleGlow(g, x, y, radius, new Color(255, 200, 50, 60), new Color(0, 0, 0, 0));
             MidpointDrawing.fillCircleGlow(g, x, y, radius / 2, new Color(255, 220, 100, 40), new Color(0, 0, 0, 0));
         }
     
-        public static void drawCaveDarkness(Graphics2D g, int width, int height, int lightX, int lightY, int lightRadius) {
+        public static void drawCaveDarkness(PixelCanvas g, int width, int height, int lightX, int lightY, int lightRadius) {
             // Edge vignette darkness bands
             for (int i = 0; i < 4; i++) {
                 int alpha = 30 - i * 5;
@@ -4755,7 +4749,7 @@ public class Assignment1_67050476_67050613 {
             }
         }
     
-        public static void drawLavaAmbient(Graphics2D g, int width, int lavaY, double progress) {
+        public static void drawLavaAmbient(PixelCanvas g, int width, int lavaY, double progress) {
             int glowAlpha = 30 + (int) (Math.sin(progress * Math.PI * 4) * 15);
             glowAlpha = Math.max(0, Math.min(60, glowAlpha));
             g.setColor(new Color(255, 80, 20, glowAlpha));
@@ -4767,181 +4761,794 @@ public class Assignment1_67050476_67050613 {
     // MIDPOINTDRAWING.JAVA
     // =========================================================================
     
-    static class MidpointDrawing {
-    
-        public static void drawCircle(Graphics2D g, int cx, int cy, int radius, Color color) {
+        static class MidpointDrawing {
+        public static void drawCircle(PixelCanvas g, int cx, int cy, int radius, Color color) {
             g.setColor(color);
-            int x = radius;
-            int y = 0;
-            int p = 1 - radius;
+            g.drawCircle(cx, cy, radius);
+        }
     
-            while (x >= y) {
-                plotSymmetricPoints(g, cx, cy, x, y);
-                y++;
-                if (p <= 0) {
-                    p = p + 2 * y + 1;
+        public static void fillCircle(PixelCanvas g, int cx, int cy, int radius, Color color) {
+            g.setColor(color);
+            g.fillCircle(cx, cy, radius);
+        }
+    
+        public static void drawEllipse(PixelCanvas g, int cx, int cy, int rx, int ry, Color color) {
+            g.setColor(color);
+            g.drawEllipse(cx, cy, rx, ry);
+        }
+    
+        public static void fillEllipse(PixelCanvas g, int cx, int cy, int rx, int ry, Color color) {
+            g.setColor(color);
+            g.fillEllipse(cx, cy, rx, ry);
+        }
+        
+        public static void fillCircleGlow(PixelCanvas g, int cx, int cy, int radius, Color centerColor, Color edgeColor) {
+            g.fillCircleGlow(cx, cy, radius, centerColor, edgeColor);
+        }
+        
+        public static void fillEllipseGlow(PixelCanvas g, int cx, int cy, int rx, int ry, Color centerColor, Color edgeColor) {
+            g.fillEllipseGlow(cx, cy, rx, ry, centerColor, edgeColor);
+        }
+    }
+
+    // =========================================================================
+    // PIXELCANVAS.JAVA - CUSTOM COMPUTER GRAPHICS ENGINE
+    // =========================================================================
+    
+    /**
+     * Custom raster graphics engine operating directly on an empty BufferedImage.
+     * Implements all drawing algorithms from scratch without relying on Java 2D primitives:
+     * - Bresenham's Line Algorithm
+     * - Midpoint Circle Algorithm (Outline & Scanline Fill)
+     * - Midpoint Ellipse Algorithm (Outline & Scanline Fill)
+     * - Bézier Curve Algorithm (Quadratic & Cubic evaluation via Bresenham segments)
+     * - Scanline Fill & Scanline Polygon Fill Algorithms
+     * - Queue-Based 4-Way Flood Fill Algorithm
+     * - Custom 5x7 Minecraft Pixel/Bitmap Font Engine
+     */
+    static class PixelCanvas {
+        private final int width;
+        private final int height;
+        private final BufferedImage image;
+        private final int[] pixels;
+        
+        private Color currentColor = Color.WHITE;
+        private float currentAlpha = 1.0f;
+        private float strokeWidth = 1.0f;
+        private AffineTransform currentTransform = new AffineTransform();
+        private final Stack<AffineTransform> transformStack = new Stack<>();
+        
+        public PixelCanvas(int width, int height) {
+            this.width = width;
+            this.height = height;
+            this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            this.pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        }
+        
+        public BufferedImage getBufferedImage() {
+            return image;
+        }
+        
+        public int getWidth() { return width; }
+        public int getHeight() { return height; }
+        
+        public void clear(Color c) {
+            int argb = (0xFF << 24) | (c.getRed() << 16) | (c.getGreen() << 8) | c.getBlue();
+            Arrays.fill(pixels, argb);
+        }
+        
+        public void setColor(Color c) {
+            if (c != null) {
+                this.currentColor = c;
+            }
+        }
+        
+        public Color getColor() {
+            return currentColor;
+        }
+        
+        public void setAlpha(float alpha) {
+            this.currentAlpha = Math.max(0.0f, Math.min(1.0f, alpha));
+        }
+        
+        public float getAlpha() {
+            return currentAlpha;
+        }
+        
+        public void setComposite(Composite comp) {
+            if (comp instanceof AlphaComposite) {
+                this.currentAlpha = ((AlphaComposite) comp).getAlpha();
+            }
+        }
+        
+        public Composite getComposite() {
+            return AlphaComposite.getInstance(AlphaComposite.SRC_OVER, currentAlpha);
+        }
+        
+        public void setStroke(Stroke s) {
+            if (s instanceof BasicStroke) {
+                this.strokeWidth = ((BasicStroke) s).getLineWidth();
+            } else {
+                this.strokeWidth = 1.0f;
+            }
+        }
+        
+        public void setStrokeWidth(float w) {
+            this.strokeWidth = w;
+        }
+        
+        // --- Transform Matrix Stack ---
+        
+        public void translate(double tx, double ty) {
+            currentTransform.translate(tx, ty);
+        }
+        
+        public void rotate(double theta) {
+            currentTransform.rotate(theta);
+        }
+        
+        public void scale(double sx, double sy) {
+            currentTransform.scale(sx, sy);
+        }
+        
+        public void pushTransform() {
+            transformStack.push(new AffineTransform(currentTransform));
+        }
+        
+        public void popTransform() {
+            if (!transformStack.isEmpty()) {
+                currentTransform = transformStack.pop();
+            }
+        }
+        
+        public AffineTransform getTransform() {
+            return new AffineTransform(currentTransform);
+        }
+        
+        public void setTransform(AffineTransform at) {
+            if (at != null) {
+                this.currentTransform = new AffineTransform(at);
+            } else {
+                this.currentTransform.setToIdentity();
+            }
+        }
+        
+        private Point2D.Double transformPoint(double x, double y) {
+            if (currentTransform.isIdentity()) {
+                return new Point2D.Double(x, y);
+            }
+            Point2D.Double src = new Point2D.Double(x, y);
+            Point2D.Double dst = new Point2D.Double();
+            currentTransform.transform(src, dst);
+            return dst;
+        }
+        
+        // --- Low-level Pixel & Alpha Blending ---
+        
+        public void setPixel(int x, int y, Color color) {
+            if (x < 0 || x >= width || y < 0 || y >= height || color == null) return;
+            int sa = (int) (color.getAlpha() * currentAlpha);
+            if (sa <= 0) return;
+            
+            int idx = y * width + x;
+            int sr = color.getRed();
+            int sg = color.getGreen();
+            int sb = color.getBlue();
+            
+            if (sa >= 255) {
+                pixels[idx] = (0xFF << 24) | (sr << 16) | (sg << 8) | sb;
+            } else {
+                int dst = pixels[idx];
+                int da = (dst >>> 24) & 0xFF;
+                int dr = (dst >>> 16) & 0xFF;
+                int dg = (dst >>> 8) & 0xFF;
+                int db = dst & 0xFF;
+                int invA = 255 - sa;
+                
+                int outA = sa + (da * invA) / 255;
+                int outR = (sr * sa + dr * invA) / 255;
+                int outG = (sg * sa + dg * invA) / 255;
+                int outB = (sb * sa + db * invA) / 255;
+                pixels[idx] = (outA << 24) | (outR << 16) | (outG << 8) | outB;
+            }
+        }
+        
+        public int getPixel(int x, int y) {
+            if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+            return pixels[y * width + x];
+        }
+        
+        // --- 1. BRESENHAM'S LINE ALGORITHM ---
+        
+        public void drawLine(int x0, int y0, int x1, int y1) {
+            Point2D.Double p0 = transformPoint(x0, y0);
+            Point2D.Double p1 = transformPoint(x1, y1);
+            drawLineRaw((int) Math.round(p0.x), (int) Math.round(p0.y), (int) Math.round(p1.x), (int) Math.round(p1.y), currentColor);
+        }
+        
+        public void drawLineRaw(int x0, int y0, int x1, int y1, Color c) {
+            int dx = Math.abs(x1 - x0);
+            int dy = Math.abs(y1 - y0);
+            int sx = x0 < x1 ? 1 : -1;
+            int sy = y0 < y1 ? 1 : -1;
+            int err = dx - dy;
+            
+            while (true) {
+                if (strokeWidth > 1.5f) {
+                    int r = (int) Math.round(strokeWidth / 2.0);
+                    for (int oy = -r; oy <= r; oy++) {
+                        for (int ox = -r; ox <= r; ox++) {
+                            setPixel(x0 + ox, y0 + oy, c);
+                        }
+                    }
                 } else {
-                    x--;
-                    p = p + 2 * y - 2 * x + 1;
+                    setPixel(x0, y0, c);
+                }
+                
+                if (x0 == x1 && y0 == y1) break;
+                int e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
                 }
             }
         }
-    
-        private static void plotSymmetricPoints(Graphics2D g, int cx, int cy, int x, int y) {
-            g.drawLine(cx + x, cy + y, cx + x, cy + y);
-            g.drawLine(cx - x, cy + y, cx - x, cy + y);
-            g.drawLine(cx + x, cy - y, cx + x, cy - y);
-            g.drawLine(cx - x, cy - y, cx - x, cy - y);
-            g.drawLine(cx + y, cy + x, cx + y, cy + x);
-            g.drawLine(cx - y, cy + x, cx - y, cy + x);
-            g.drawLine(cx + y, cy - x, cx + y, cy - x);
-            g.drawLine(cx - y, cy - x, cx - y, cy - x);
+        
+        // --- 2. SCANLINE FILL ALGORITHM ---
+        
+        public void drawHLine(int x1, int x2, int y, Color c) {
+            if (y < 0 || y >= height || c == null) return;
+            int minX = Math.max(0, Math.min(x1, x2));
+            int maxX = Math.min(width - 1, Math.max(x1, x2));
+            if (minX > maxX) return;
+            
+            int sa = (int) (c.getAlpha() * currentAlpha);
+            if (sa <= 0) return;
+            
+            int sr = c.getRed();
+            int sg = c.getGreen();
+            int sb = c.getBlue();
+            int rowStart = y * width;
+            
+            if (sa >= 255) {
+                int rgbOpaque = (0xFF << 24) | (sr << 16) | (sg << 8) | sb;
+                for (int x = minX; x <= maxX; x++) {
+                    pixels[rowStart + x] = rgbOpaque;
+                }
+            } else {
+                int invA = 255 - sa;
+                for (int x = minX; x <= maxX; x++) {
+                    int idx = rowStart + x;
+                    int dst = pixels[idx];
+                    int da = (dst >>> 24) & 0xFF;
+                    int dr = (dst >>> 16) & 0xFF;
+                    int dg = (dst >>> 8) & 0xFF;
+                    int db = dst & 0xFF;
+                    
+                    int outA = sa + (da * invA) / 255;
+                    int outR = (sr * sa + dr * invA) / 255;
+                    int outG = (sg * sa + dg * invA) / 255;
+                    int outB = (sb * sa + db * invA) / 255;
+                    pixels[idx] = (outA << 24) | (outR << 16) | (outG << 8) | outB;
+                }
+            }
         }
-    
-        public static void fillCircle(Graphics2D g, int cx, int cy, int radius, Color color) {
-            g.setColor(color);
+        
+        public void fillRect(int x, int y, int w, int h) {
+            if (w <= 0 || h <= 0) return;
+            if (currentTransform.isIdentity()) {
+                for (int cy = y; cy < y + h; cy++) {
+                    drawHLine(x, x + w - 1, cy, currentColor);
+                }
+            } else {
+                int[] xp = {x, x + w, x + w, x};
+                int[] yp = {y, y, y + h, y + h};
+                fillPolygon(xp, yp, 4);
+            }
+        }
+        
+        public void drawRect(int x, int y, int w, int h) {
+            if (w <= 0 || h <= 0) return;
+            if (currentTransform.isIdentity()) {
+                drawLineRaw(x, y, x + w - 1, y, currentColor);
+                drawLineRaw(x, y + h - 1, x + w - 1, y + h - 1, currentColor);
+                drawLineRaw(x, y, x, y + h - 1, currentColor);
+                drawLineRaw(x + w - 1, y, x + w - 1, y + h - 1, currentColor);
+            } else {
+                int[] xp = {x, x + w - 1, x + w - 1, x};
+                int[] yp = {y, y, y + h - 1, y + h - 1};
+                drawPolygon(xp, yp, 4);
+            }
+        }
+        
+        // --- 3. POLYGON SCANLINE FILL & OUTLINE ---
+        
+        public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
+            if (nPoints < 2) return;
+            for (int i = 0; i < nPoints; i++) {
+                int next = (i + 1) % nPoints;
+                drawLine(xPoints[i], yPoints[i], xPoints[next], yPoints[next]);
+            }
+        }
+        
+        public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
+            if (nPoints < 3) return;
+            Point2D.Double[] pts = new Point2D.Double[nPoints];
+            int minY = height, maxY = -1;
+            for (int i = 0; i < nPoints; i++) {
+                pts[i] = transformPoint(xPoints[i], yPoints[i]);
+                int py = (int) Math.round(pts[i].y);
+                if (py < minY) minY = py;
+                if (py > maxY) maxY = py;
+            }
+            minY = Math.max(0, minY);
+            maxY = Math.min(height - 1, maxY);
+            
+            List<Integer> nodeX = new ArrayList<>();
+            for (int scanY = minY; scanY <= maxY; scanY++) {
+                nodeX.clear();
+                double yPos = scanY + 0.5;
+                for (int i = 0; i < nPoints; i++) {
+                    int j = (i + 1) % nPoints;
+                    double y1 = pts[i].y;
+                    double y2 = pts[j].y;
+                    if ((y1 < yPos && y2 >= yPos) || (y2 < yPos && y1 >= yPos)) {
+                        double x1 = pts[i].x;
+                        double x2 = pts[j].x;
+                        double xIntersect = x1 + (yPos - y1) / (y2 - y1) * (x2 - x1);
+                        nodeX.add((int) Math.round(xIntersect));
+                    }
+                }
+                if (nodeX.size() >= 2) {
+                    nodeX.sort(Integer::compareTo);
+                    for (int k = 0; k < nodeX.size() - 1; k += 2) {
+                        drawHLine(nodeX.get(k), nodeX.get(k + 1), scanY, currentColor);
+                    }
+                }
+            }
+        }
+        
+        // --- 4. MIDPOINT CIRCLE ALGORITHM ---
+        
+        public void drawCircle(int cx, int cy, int radius) {
+            Point2D.Double center = transformPoint(cx, cy);
+            int icx = (int) Math.round(center.x);
+            int icy = (int) Math.round(center.y);
             int x = radius;
             int y = 0;
             int p = 1 - radius;
-    
+            
             while (x >= y) {
-                g.drawLine(cx - x, cy + y, cx + x, cy + y);
-                g.drawLine(cx - x, cy - y, cx + x, cy - y);
-                g.drawLine(cx - y, cy + x, cx + y, cy + x);
-                g.drawLine(cx - y, cy - x, cx + y, cy - x);
+                setPixel(icx + x, icy + y, currentColor);
+                setPixel(icx - x, icy + y, currentColor);
+                setPixel(icx + x, icy - y, currentColor);
+                setPixel(icx - x, icy - y, currentColor);
+                setPixel(icx + y, icy + x, currentColor);
+                setPixel(icx - y, icy + x, currentColor);
+                setPixel(icx + y, icy - x, currentColor);
+                setPixel(icx - y, icy - x, currentColor);
                 
                 y++;
                 if (p <= 0) {
-                    p = p + 2 * y + 1;
+                    p += 2 * y + 1;
                 } else {
                     x--;
-                    p = p + 2 * y - 2 * x + 1;
-                }
-            }
-        }
-    
-        public static void drawEllipse(Graphics2D g, int cx, int cy, int rx, int ry, Color color) {
-            g.setColor(color);
-            int rx2 = rx * rx;
-            int ry2 = ry * ry;
-            int twoRx2 = 2 * rx2;
-            int twoRy2 = 2 * ry2;
-            int p;
-            int x = 0;
-            int y = ry;
-            int px = 0;
-            int py = twoRx2 * y;
-    
-            // Region 1
-            p = (int) (ry2 - (rx2 * ry) + (0.25 * rx2));
-            while (px < py) {
-                plotEllipseSymmetricPoints(g, cx, cy, x, y);
-                x++;
-                px += twoRy2;
-                if (p < 0) {
-                    p += ry2 + px;
-                } else {
-                    y--;
-                    py -= twoRx2;
-                    p += ry2 + px - py;
-                }
-            }
-    
-            // Region 2
-            p = (int) (ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
-            while (y > 0) {
-                plotEllipseSymmetricPoints(g, cx, cy, x, y);
-                y--;
-                py -= twoRx2;
-                if (p > 0) {
-                    p += rx2 - py;
-                } else {
-                    x++;
-                    px += twoRy2;
-                    p += rx2 - py + px;
-                }
-            }
-        }
-    
-        private static void plotEllipseSymmetricPoints(Graphics2D g, int cx, int cy, int x, int y) {
-            g.drawLine(cx + x, cy + y, cx + x, cy + y);
-            g.drawLine(cx - x, cy + y, cx - x, cy + y);
-            g.drawLine(cx + x, cy - y, cx + x, cy - y);
-            g.drawLine(cx - x, cy - y, cx - x, cy - y);
-        }
-    
-        public static void fillEllipse(Graphics2D g, int cx, int cy, int rx, int ry, Color color) {
-            g.setColor(color);
-            int rx2 = rx * rx;
-            int ry2 = ry * ry;
-            int twoRx2 = 2 * rx2;
-            int twoRy2 = 2 * ry2;
-            int p;
-            int x = 0;
-            int y = ry;
-            int px = 0;
-            int py = twoRx2 * y;
-    
-            p = (int) (ry2 - (rx2 * ry) + (0.25 * rx2));
-            while (px < py) {
-                g.drawLine(cx - x, cy + y, cx + x, cy + y);
-                g.drawLine(cx - x, cy - y, cx + x, cy - y);
-                x++;
-                px += twoRy2;
-                if (p < 0) {
-                    p += ry2 + px;
-                } else {
-                    y--;
-                    py -= twoRx2;
-                    p += ry2 + px - py;
-                }
-            }
-    
-            p = (int) (ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
-            while (y > 0) {
-                g.drawLine(cx - x, cy + y, cx + x, cy + y);
-                g.drawLine(cx - x, cy - y, cx + x, cy - y);
-                y--;
-                py -= twoRx2;
-                if (p > 0) {
-                    p += rx2 - py;
-                } else {
-                    x++;
-                    px += twoRy2;
-                    p += rx2 - py + px;
+                    p += 2 * y - 2 * x + 1;
                 }
             }
         }
         
-        public static void fillCircleGlow(Graphics2D g, int cx, int cy, int radius, Color centerColor, Color edgeColor) {
+        public void fillCircle(int cx, int cy, int radius) {
+            Point2D.Double center = transformPoint(cx, cy);
+            int icx = (int) Math.round(center.x);
+            int icy = (int) Math.round(center.y);
+            int x = radius;
+            int y = 0;
+            int p = 1 - radius;
+            
+            while (x >= y) {
+                drawHLine(icx - x, icx + x, icy + y, currentColor);
+                drawHLine(icx - x, icx + x, icy - y, currentColor);
+                drawHLine(icx - y, icx + y, icy + x, currentColor);
+                drawHLine(icx - y, icx + y, icy - x, currentColor);
+                
+                y++;
+                if (p <= 0) {
+                    p += 2 * y + 1;
+                } else {
+                    x--;
+                    p += 2 * y - 2 * x + 1;
+                }
+            }
+        }
+        
+        public void fillCircleGlow(int cx, int cy, int radius, Color centerColor, Color edgeColor) {
             int step = Math.max(1, radius / 20);
             for (int r = radius; r > 0; r -= step) {
                 double t = 1.0 - ((double) r / radius);
-                Color c = lerpColor(edgeColor, centerColor, t);
-                fillCircle(g, cx, cy, r, c);
+                Color c = DrawUtils.lerpColor(edgeColor, centerColor, t);
+                setColor(c);
+                fillCircle(cx, cy, r);
             }
-            // Draw center
-            fillCircle(g, cx, cy, Math.max(1, step), centerColor);
+            setColor(centerColor);
+            fillCircle(cx, cy, Math.max(1, step));
         }
         
-        public static void fillEllipseGlow(Graphics2D g, int cx, int cy, int rx, int ry, Color centerColor, Color edgeColor) {
+        // --- 5. MIDPOINT ELLIPSE ALGORITHM ---
+        
+        public void drawEllipse(int cx, int cy, int rx, int ry) {
+            Point2D.Double center = transformPoint(cx, cy);
+            int icx = (int) Math.round(center.x);
+            int icy = (int) Math.round(center.y);
+            long rx2 = (long) rx * rx;
+            long ry2 = (long) ry * ry;
+            long twoRx2 = 2 * rx2;
+            long twoRy2 = 2 * ry2;
+            
+            int x = 0;
+            int y = ry;
+            long px = 0;
+            long py = twoRx2 * y;
+            
+            // Region 1
+            double p = ry2 - (rx2 * ry) + (0.25 * rx2);
+            while (px < py) {
+                setPixel(icx + x, icy + y, currentColor);
+                setPixel(icx - x, icy + y, currentColor);
+                setPixel(icx + x, icy - y, currentColor);
+                setPixel(icx - x, icy - y, currentColor);
+                x++;
+                px += twoRy2;
+                if (p < 0) {
+                    p += ry2 + px;
+                } else {
+                    y--;
+                    py -= twoRx2;
+                    p += ry2 + px - py;
+                }
+            }
+            
+            // Region 2
+            p = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1.0) * (y - 1.0) - rx2 * ry2;
+            while (y >= 0) {
+                setPixel(icx + x, icy + y, currentColor);
+                setPixel(icx - x, icy + y, currentColor);
+                setPixel(icx + x, icy - y, currentColor);
+                setPixel(icx - x, icy - y, currentColor);
+                y--;
+                py -= twoRx2;
+                if (p > 0) {
+                    p += rx2 - py;
+                } else {
+                    x++;
+                    px += twoRy2;
+                    p += rx2 - py + px;
+                }
+            }
+        }
+        
+        public void fillEllipse(int cx, int cy, int rx, int ry) {
+            Point2D.Double center = transformPoint(cx, cy);
+            int icx = (int) Math.round(center.x);
+            int icy = (int) Math.round(center.y);
+            long rx2 = (long) rx * rx;
+            long ry2 = (long) ry * ry;
+            long twoRx2 = 2 * rx2;
+            long twoRy2 = 2 * ry2;
+            
+            int x = 0;
+            int y = ry;
+            long px = 0;
+            long py = twoRx2 * y;
+            
+            // Region 1
+            double p = ry2 - (rx2 * ry) + (0.25 * rx2);
+            while (px < py) {
+                drawHLine(icx - x, icx + x, icy + y, currentColor);
+                drawHLine(icx - x, icx + x, icy - y, currentColor);
+                x++;
+                px += twoRy2;
+                if (p < 0) {
+                    p += ry2 + px;
+                } else {
+                    y--;
+                    py -= twoRx2;
+                    p += ry2 + px - py;
+                }
+            }
+            
+            // Region 2
+            p = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1.0) * (y - 1.0) - rx2 * ry2;
+            while (y >= 0) {
+                drawHLine(icx - x, icx + x, icy + y, currentColor);
+                drawHLine(icx - x, icx + x, icy - y, currentColor);
+                y--;
+                py -= twoRx2;
+                if (p > 0) {
+                    p += rx2 - py;
+                } else {
+                    x++;
+                    px += twoRy2;
+                    p += rx2 - py + px;
+                }
+            }
+        }
+        
+        public void fillEllipseGlow(int cx, int cy, int rx, int ry, Color centerColor, Color edgeColor) {
             int maxR = Math.max(rx, ry);
             int step = Math.max(1, maxR / 20);
             for (int r = maxR; r > 0; r -= step) {
                 double t = 1.0 - ((double) r / maxR);
-                Color c = lerpColor(edgeColor, centerColor, t);
-                int curRx = (int)(rx * ((double)r/maxR));
-                int curRy = (int)(ry * ((double)r/maxR));
+                Color c = DrawUtils.lerpColor(edgeColor, centerColor, t);
+                int curRx = (int) (rx * ((double) r / maxR));
+                int curRy = (int) (ry * ((double) r / maxR));
                 if (curRx > 0 && curRy > 0) {
-                    fillEllipse(g, cx, cy, curRx, curRy, c);
+                    setColor(c);
+                    fillEllipse(cx, cy, curRx, curRy);
                 }
             }
-            fillCircle(g, cx, cy, Math.max(1, step), centerColor);
+            setColor(centerColor);
+            fillCircle(cx, cy, Math.max(1, step));
         }
         
-        private static Color lerpColor(Color a, Color b, double t) {
-            return DrawUtils.lerpColor(a, b, t);
+        // --- 6. BEZIER CURVE ALGORITHM ---
+        
+        public void drawBezierQuadratic(double x0, double y0, double cx, double cy, double x1, double y1, int segments) {
+            Point2D.Double p0 = transformPoint(x0, y0);
+            Point2D.Double pc = transformPoint(cx, cy);
+            Point2D.Double p1 = transformPoint(x1, y1);
+            
+            double prevX = p0.x;
+            double prevY = p0.y;
+            for (int i = 1; i <= segments; i++) {
+                double t = (double) i / segments;
+                double oneMinusT = 1.0 - t;
+                double curX = oneMinusT * oneMinusT * p0.x + 2 * oneMinusT * t * pc.x + t * t * p1.x;
+                double curY = oneMinusT * oneMinusT * p0.y + 2 * oneMinusT * t * pc.y + t * t * p1.y;
+                drawLineRaw((int) Math.round(prevX), (int) Math.round(prevY), (int) Math.round(curX), (int) Math.round(curY), currentColor);
+                prevX = curX;
+                prevY = curY;
+            }
+        }
+        
+        public void drawBezierCubic(double x0, double y0, double cx1, double cy1, double cx2, double cy2, double x1, double y1, int segments) {
+            Point2D.Double p0 = transformPoint(x0, y0);
+            Point2D.Double pc1 = transformPoint(cx1, cy1);
+            Point2D.Double pc2 = transformPoint(cx2, cy2);
+            Point2D.Double p1 = transformPoint(x1, y1);
+            
+            double prevX = p0.x;
+            double prevY = p0.y;
+            for (int i = 1; i <= segments; i++) {
+                double t = (double) i / segments;
+                double oneMinusT = 1.0 - t;
+                double curX = oneMinusT * oneMinusT * oneMinusT * p0.x + 3 * oneMinusT * oneMinusT * t * pc1.x + 3 * oneMinusT * t * t * pc2.x + t * t * t * p1.x;
+                double curY = oneMinusT * oneMinusT * oneMinusT * p0.y + 3 * oneMinusT * oneMinusT * t * pc1.y + 3 * oneMinusT * t * t * pc2.y + t * t * t * p1.y;
+                drawLineRaw((int) Math.round(prevX), (int) Math.round(prevY), (int) Math.round(curX), (int) Math.round(curY), currentColor);
+                prevX = curX;
+                prevY = curY;
+            }
+        }
+        
+        public void fillBezierWing(double x0, double y0, double cx1, double cy1, double x1, double y1, double cx2, double cy2) {
+            int segs = 16;
+            int totalPts = segs * 2;
+            int[] xPts = new int[totalPts];
+            int[] yPts = new int[totalPts];
+            int idx = 0;
+            for (int i = 0; i < segs; i++) {
+                double t = (double) i / segs;
+                double omt = 1.0 - t;
+                xPts[idx] = (int) Math.round(omt * omt * x0 + 2 * omt * t * cx1 + t * t * x1);
+                yPts[idx] = (int) Math.round(omt * omt * y0 + 2 * omt * t * cy1 + t * t * y1);
+                idx++;
+            }
+            for (int i = 0; i < segs; i++) {
+                double t = (double) i / segs;
+                double omt = 1.0 - t;
+                xPts[idx] = (int) Math.round(omt * omt * x1 + 2 * omt * t * cx2 + t * t * x0);
+                yPts[idx] = (int) Math.round(omt * omt * y1 + 2 * omt * t * cy2 + t * t * y0);
+                idx++;
+            }
+            fillPolygon(xPts, yPts, totalPts);
+        }
+        
+        // --- 7. QUEUE-BASED 4-WAY FLOOD FILL ALGORITHM ---
+        
+        public void floodFill(int startX, int startY, Color targetColor, Color fillColor) {
+            if (startX < 0 || startX >= width || startY < 0 || startY >= height) return;
+            int targetRGB = (0xFF << 24) | (targetColor.getRed() << 16) | (targetColor.getGreen() << 8) | targetColor.getBlue();
+            int fillRGB = (0xFF << 24) | (fillColor.getRed() << 16) | (fillColor.getGreen() << 8) | fillColor.getBlue();
+            if (targetRGB == fillRGB) return;
+            
+            int curAtStart = pixels[startY * width + startX];
+            if (curAtStart != targetRGB) return;
+            
+            int[] queue = new int[width * height];
+            int head = 0, tail = 0;
+            queue[tail++] = (startY << 16) | (startX & 0xFFFF);
+            pixels[startY * width + startX] = fillRGB;
+            
+            int[] dx = {1, -1, 0, 0};
+            int[] dy = {0, 0, 1, -1};
+            
+            while (head < tail) {
+                int pos = queue[head++];
+                int qy = pos >>> 16;
+                int qx = pos & 0xFFFF;
+                
+                for (int d = 0; d < 4; d++) {
+                    int nx = qx + dx[d];
+                    int ny = qy + dy[d];
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        int nIdx = ny * width + nx;
+                        if (pixels[nIdx] == targetRGB) {
+                            pixels[nIdx] = fillRGB;
+                            queue[tail++] = (ny << 16) | (nx & 0xFFFF);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // --- 8. CUSTOM 5x7 MINECRAFT PIXEL / BITMAP FONT ENGINE ---
+        
+        public void drawMinecraftText(String text, int x, int y, int fontSize, Color color) {
+            if (text == null || text.isEmpty()) return;
+            int scale = Math.max(1, fontSize / 8);
+            int cursorX = x;
+            
+            // Drop shadow pass
+            Color shadowColor = new Color(30, 30, 30, (int) (color.getAlpha() * 0.85f));
+            for (int i = 0; i < text.length(); i++) {
+                char ch = text.charAt(i);
+                drawGlyph(ch, cursorX + scale, y + scale, scale, shadowColor);
+                cursorX += (5 + 1) * scale;
+            }
+            
+            // Primary text glyphs
+            cursorX = x;
+            for (int i = 0; i < text.length(); i++) {
+                char ch = text.charAt(i);
+                drawGlyph(ch, cursorX, y, scale, color);
+                cursorX += (5 + 1) * scale;
+            }
+        }
+        
+        private void drawGlyph(char ch, int gx, int gy, int scale, Color col) {
+            byte[] cols = getFontGlyph(ch);
+            if (cols == null) return;
+            
+            Color oldColor = currentColor;
+            currentColor = col;
+            for (int c = 0; c < 5; c++) {
+                int bits = cols[c] & 0xFF;
+                for (int r = 0; r < 7; r++) {
+                    if ((bits & (1 << r)) != 0) {
+                        fillRect(gx + c * scale, gy + r * scale, scale, scale);
+                    }
+                }
+            }
+            currentColor = oldColor;
+        }
+        
+        private static final byte[][] GLYPH_MAP = new byte[128][5];
+        static {
+            initFontData();
+        }
+        
+        private static byte[] getFontGlyph(char ch) {
+            if (ch >= 0 && ch < 128) {
+                return GLYPH_MAP[ch];
+            }
+            return GLYPH_MAP['?'];
+        }
+        
+        private static void setG(char ch, int c0, int c1, int c2, int c3, int c4) {
+            GLYPH_MAP[ch] = new byte[]{(byte) c0, (byte) c1, (byte) c2, (byte) c3, (byte) c4};
+        }
+        
+        private static void initFontData() {
+            setG(' ', 0x00, 0x00, 0x00, 0x00, 0x00);
+            setG('!', 0x00, 0x00, 0x5F, 0x00, 0x00);
+            setG('"', 0x00, 0x07, 0x00, 0x07, 0x00);
+            setG('#', 0x14, 0x7F, 0x14, 0x7F, 0x14);
+            setG('$', 0x24, 0x2A, 0x7F, 0x2A, 0x12);
+            setG('%', 0x23, 0x13, 0x08, 0x64, 0x62);
+            setG('&', 0x36, 0x49, 0x55, 0x22, 0x50);
+            setG('\'', 0x00, 0x05, 0x03, 0x00, 0x00);
+            setG('(', 0x00, 0x1C, 0x22, 0x41, 0x00);
+            setG(')', 0x00, 0x41, 0x22, 0x1C, 0x00);
+            setG('*', 0x14, 0x08, 0x3E, 0x08, 0x14);
+            setG('+', 0x08, 0x08, 0x3E, 0x08, 0x08);
+            setG(',', 0x00, 0x50, 0x30, 0x00, 0x00);
+            setG('-', 0x08, 0x08, 0x08, 0x08, 0x08);
+            setG('.', 0x00, 0x60, 0x60, 0x00, 0x00);
+            setG('/', 0x20, 0x10, 0x08, 0x04, 0x02);
+            setG('0', 0x3E, 0x51, 0x49, 0x45, 0x3E);
+            setG('1', 0x00, 0x42, 0x7F, 0x40, 0x00);
+            setG('2', 0x42, 0x61, 0x51, 0x49, 0x46);
+            setG('3', 0x21, 0x41, 0x45, 0x4B, 0x31);
+            setG('4', 0x18, 0x14, 0x12, 0x7F, 0x10);
+            setG('5', 0x27, 0x45, 0x45, 0x45, 0x39);
+            setG('6', 0x3C, 0x4A, 0x49, 0x49, 0x30);
+            setG('7', 0x01, 0x71, 0x09, 0x05, 0x03);
+            setG('8', 0x36, 0x49, 0x49, 0x49, 0x36);
+            setG('9', 0x06, 0x49, 0x49, 0x29, 0x1E);
+            setG(':', 0x00, 0x36, 0x36, 0x00, 0x00);
+            setG(';', 0x00, 0x56, 0x36, 0x00, 0x00);
+            setG('<', 0x08, 0x14, 0x22, 0x41, 0x00);
+            setG('=', 0x14, 0x14, 0x14, 0x14, 0x14);
+            setG('>', 0x00, 0x41, 0x22, 0x14, 0x08);
+            setG('?', 0x02, 0x01, 0x51, 0x09, 0x06);
+            setG('@', 0x32, 0x49, 0x79, 0x41, 0x3E);
+            setG('A', 0x7E, 0x11, 0x11, 0x11, 0x7E);
+            setG('B', 0x7F, 0x49, 0x49, 0x49, 0x36);
+            setG('C', 0x3E, 0x41, 0x41, 0x41, 0x22);
+            setG('D', 0x7F, 0x41, 0x41, 0x22, 0x1C);
+            setG('E', 0x7F, 0x49, 0x49, 0x49, 0x41);
+            setG('F', 0x7F, 0x09, 0x09, 0x09, 0x01);
+            setG('G', 0x3E, 0x41, 0x49, 0x49, 0x7A);
+            setG('H', 0x7F, 0x08, 0x08, 0x08, 0x7F);
+            setG('I', 0x00, 0x41, 0x7F, 0x41, 0x00);
+            setG('J', 0x20, 0x40, 0x41, 0x3F, 0x01);
+            setG('K', 0x7F, 0x08, 0x14, 0x22, 0x41);
+            setG('L', 0x7F, 0x40, 0x40, 0x40, 0x40);
+            setG('M', 0x7F, 0x02, 0x0C, 0x02, 0x7F);
+            setG('N', 0x7F, 0x04, 0x08, 0x10, 0x7F);
+            setG('O', 0x3E, 0x41, 0x41, 0x41, 0x3E);
+            setG('P', 0x7F, 0x09, 0x09, 0x09, 0x06);
+            setG('Q', 0x3E, 0x41, 0x51, 0x21, 0x5E);
+            setG('R', 0x7F, 0x09, 0x19, 0x29, 0x46);
+            setG('S', 0x46, 0x49, 0x49, 0x49, 0x31);
+            setG('T', 0x01, 0x01, 0x7F, 0x01, 0x01);
+            setG('U', 0x3F, 0x40, 0x40, 0x40, 0x3F);
+            setG('V', 0x1F, 0x20, 0x40, 0x20, 0x1F);
+            setG('W', 0x3F, 0x40, 0x38, 0x40, 0x3F);
+            setG('X', 0x63, 0x14, 0x08, 0x14, 0x63);
+            setG('Y', 0x07, 0x08, 0x70, 0x08, 0x07);
+            setG('Z', 0x61, 0x51, 0x49, 0x45, 0x43);
+            setG('[', 0x00, 0x7F, 0x41, 0x41, 0x00);
+            setG('\\', 0x02, 0x04, 0x08, 0x10, 0x20);
+            setG(']', 0x00, 0x41, 0x41, 0x7F, 0x00);
+            setG('^', 0x04, 0x02, 0x01, 0x02, 0x04);
+            setG('_', 0x40, 0x40, 0x40, 0x40, 0x40);
+            setG('`', 0x00, 0x01, 0x02, 0x04, 0x00);
+            setG('a', 0x20, 0x54, 0x54, 0x54, 0x78);
+            setG('b', 0x7F, 0x48, 0x44, 0x44, 0x38);
+            setG('c', 0x38, 0x44, 0x44, 0x44, 0x20);
+            setG('d', 0x38, 0x44, 0x44, 0x48, 0x7F);
+            setG('e', 0x38, 0x54, 0x54, 0x54, 0x18);
+            setG('f', 0x08, 0x7E, 0x09, 0x01, 0x02);
+            setG('g', 0x0C, 0x52, 0x52, 0x52, 0x3E);
+            setG('h', 0x7F, 0x08, 0x04, 0x04, 0x78);
+            setG('i', 0x00, 0x44, 0x7D, 0x40, 0x00);
+            setG('j', 0x20, 0x40, 0x44, 0x3D, 0x00);
+            setG('k', 0x7F, 0x10, 0x28, 0x44, 0x00);
+            setG('l', 0x00, 0x41, 0x7F, 0x40, 0x00);
+            setG('m', 0x7C, 0x04, 0x18, 0x04, 0x78);
+            setG('n', 0x7C, 0x08, 0x04, 0x04, 0x78);
+            setG('o', 0x38, 0x44, 0x44, 0x44, 0x38);
+            setG('p', 0x7C, 0x14, 0x14, 0x14, 0x08);
+            setG('q', 0x08, 0x14, 0x14, 0x18, 0x7C);
+            setG('r', 0x7C, 0x08, 0x04, 0x04, 0x08);
+            setG('s', 0x48, 0x54, 0x54, 0x54, 0x20);
+            setG('t', 0x04, 0x3F, 0x44, 0x40, 0x20);
+            setG('u', 0x3C, 0x40, 0x40, 0x20, 0x7C);
+            setG('v', 0x1C, 0x20, 0x40, 0x20, 0x1C);
+            setG('w', 0x3C, 0x40, 0x30, 0x40, 0x3C);
+            setG('x', 0x44, 0x28, 0x10, 0x28, 0x44);
+            setG('y', 0x0C, 0x50, 0x50, 0x50, 0x3C);
+            setG('z', 0x44, 0x64, 0x54, 0x4C, 0x44);
+            setG('{', 0x00, 0x08, 0x36, 0x41, 0x00);
+            setG('|', 0x00, 0x00, 0x7F, 0x00, 0x00);
+            setG('}', 0x00, 0x41, 0x36, 0x08, 0x00);
+            setG('~', 0x08, 0x04, 0x08, 0x10, 0x08);
         }
     }
-
 }
+
