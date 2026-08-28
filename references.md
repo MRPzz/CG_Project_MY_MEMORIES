@@ -25,25 +25,35 @@
 - Java AffineTransform API: https://docs.oracle.com/en/java/javase/17/docs/api/java.desktop/java/awt/geom/AffineTransform.html
 - Java AlphaComposite API: https://docs.oracle.com/en/java/javase/17/docs/api/java.desktop/java/awt/AlphaComposite.html
 
-## Minecraft Visual References (Inspired Images)
-- Minecraft Title Screen UI: https://minecraft.wiki/w/Menu_screen
-- Minecraft Block Textures: https://minecraft.wiki/w/Block
-- Minecraft Steve Skin: https://minecraft.wiki/w/Player
-- Minecraft Creeper: https://minecraft.wiki/w/Creeper
-- Minecraft Zombie: https://minecraft.wiki/w/Zombie
-- Minecraft Pig: https://minecraft.wiki/w/Pig
-- Minecraft Wolf: https://minecraft.wiki/w/Wolf
-- Minecraft Iron Golem: https://minecraft.wiki/w/Iron_Golem
-- Minecraft Villager: https://minecraft.wiki/w/Villager
-- Minecraft Blaze: https://minecraft.wiki/w/Blaze
-- Minecraft Ghast: https://minecraft.wiki/w/Ghast
-- Minecraft Enderman: https://minecraft.wiki/w/Enderman
-- Minecraft Ender Dragon: https://minecraft.wiki/w/Ender_Dragon
-- Minecraft End Crystal: https://minecraft.wiki/w/End_Crystal
-- Minecraft Nether Portal: https://minecraft.wiki/w/Nether_portal
-- Minecraft End Portal: https://minecraft.wiki/w/End_portal
-- Minecraft HUD (Hearts, Hunger): https://minecraft.wiki/w/Heads-up_display
-- Minecraft Achievements: https://minecraft.wiki/w/Advancement
+## Main Models & Entities from Minecraft (Procedural Replications)
+- **Player (Steve)**: https://minecraft.wiki/w/Player
+  - Procedural humanoid model with walking animation, head, torso, articulated arms/legs, and tool wielding.
+- **Creeper**: https://minecraft.wiki/w/Creeper
+  - Procedural quad-legged green hostile mob with authentic pixel facial expression.
+- **Zombie**: https://minecraft.wiki/w/Zombie
+  - Procedural mob with outstretched arms, green skin, and walking cycle.
+- **Blaze**: https://minecraft.wiki/w/Blaze
+  - Procedural floating head with 6 trigonometric-orbiting blaze rods and fireball attacks.
+- **Ghast**: https://minecraft.wiki/w/Ghast
+  - Procedural floating white cube entity with tentacles, facial features, and fireballs.
+- **Enderman**: https://minecraft.wiki/w/Enderman
+  - Tall slender silhouette with glowing purple pixel eyes.
+- **Ender Dragon**: https://minecraft.wiki/w/Ender_Dragon
+  - Multi-part boss model with dynamic Bézier flapping wings and death particle beams.
+- **End Crystal**: https://minecraft.wiki/w/End_Crystal
+  - Rotating crystalline structure with bedrock/obsidian pedestal and magenta glow.
+
+## Environment, Blocks & Items References
+- **Minecraft Block Textures** (Grass, Dirt, Stone, Cobble, Log, Leaves, Planks, Glass, Ores, Obsidian, Netherrack, Glowstone, End Stone, Bedrock): https://minecraft.wiki/w/Block
+- **Minecraft Nether Portal**: https://minecraft.wiki/w/Nether_portal
+- **Minecraft End Portal & Frame**: https://minecraft.wiki/w/End_portal
+- **Minecraft Eye of Ender**: https://minecraft.wiki/w/Eye_of_Ender
+- **Minecraft Weapons & Tools** (Diamond Sword, Iron/Diamond Pickaxe, Bow): https://minecraft.wiki/w/Weapon
+
+## UI, HUD & Game Systems References
+- **Minecraft Title Screen & Menus**: https://minecraft.wiki/w/Menu_screen
+- **Minecraft HUD** (Health Hearts, Hunger Bar, XP Bar): https://minecraft.wiki/w/Heads-up_display
+- **Minecraft Advancement / Achievement System**: https://minecraft.wiki/w/Advancement
 
 ## Animation Techniques
 - Smooth easing functions (Hermite interpolation): https://en.wikipedia.org/wiki/Smoothstep
