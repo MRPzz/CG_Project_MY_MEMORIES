@@ -21,9 +21,7 @@ public class Assignment1_67050476_67050613 {
         });
     }
 
-    // =========================================================================
-    // ANIMATION PANEL & SCENE MANAGER
-    // =========================================================================
+    // Scene manager
     static class AnimationPanel extends JPanel implements ActionListener {
         private final List<Scene> scenes = new ArrayList<>();
         private final Timer timer;
@@ -87,9 +85,7 @@ public class Assignment1_67050476_67050613 {
         public void actionPerformed(ActionEvent e) { repaint(); }
     }
 
-    // =========================================================================
-    // BASE SCENE
-    // =========================================================================
+    // Base scene
     static abstract class Scene {
         protected final String name;
         protected final int durationMs;
@@ -102,9 +98,7 @@ public class Assignment1_67050476_67050613 {
         public abstract void render(PixelCanvas g2d, int width, int height, double progress);
     }
 
-    // =========================================================================
-    // SCENE 1: TITLE SCENE
-    // =========================================================================
+    // Scene 1: Title screen
     static class TitleScene extends Scene {
         public TitleScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -140,9 +134,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 2: CREATE WORLD SCENE
-    // =========================================================================
+    // Scene 2: Create world
     static class CreateWorldScene extends Scene {
         public CreateWorldScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -188,9 +180,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 3: FIRST DAY SCENE
-    // =========================================================================
+    // Scene 3: First day & punching wood
     static class FirstDayScene extends Scene {
         public FirstDayScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -251,9 +241,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 4: FIRST NIGHT SCENE
-    // =========================================================================
+    // Scene 4: First night & shelter
     static class FirstNightScene extends Scene {
         public FirstNightScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -314,9 +302,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 5: MINING SCENE
-    // =========================================================================
+    // Scene 5: Mining diamonds
     static class MiningScene extends Scene {
         private static final int COLS = 30, ROWS = 30, BS = DrawUtils.BLOCK_SIZE;
         private final byte[][] world = new byte[ROWS][COLS];
@@ -402,9 +388,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 6: BUILD HOME SCENE
-    // =========================================================================
+    // Scene 6: Building home
     static class BuildHomeScene extends Scene {
         public BuildHomeScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -470,9 +454,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 7: NETHER PORTAL SCENE
-    // =========================================================================
+    // Scene 7: Nether portal & Ghast
     static class NetherPortalScene extends Scene {
         private final Random rand = new Random(700);
         private static final int[][] FRAME = {{0,0},{1,0},{2,0},{3,0},{0,-1},{3,-1},{0,-2},{3,-2},{0,-3},{3,-3},{0,-4},{1,-4},{2,-4},{3,-4}};
@@ -553,9 +535,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 8: BLAZE FIGHT SCENE
-    // =========================================================================
+    // Scene 8: Blaze fight
     static class BlazeFightScene extends Scene {
         public BlazeFightScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -636,9 +616,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 9: EYE OF ENDER SCENE
-    // =========================================================================
+    // Scene 9: Eye of Ender & stronghold
     static class EyeOfEnderScene extends Scene {
         public EyeOfEnderScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -713,9 +691,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // SCENE 10: DRAGON FIGHT SCENE
-    // =========================================================================
+    // Scene 10: Ender Dragon battle
     static class DragonFightScene extends Scene {
         public DragonFightScene(String name, int durationMs) { super(name, durationMs); }
 
@@ -864,9 +840,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // DRAWUTILS - PROCEDURAL RENDERING UTILITIES
-    // =========================================================================
+    // Drawing helpers and textures
     static class DrawUtils {
         public static final Color SKY_BLUE = new Color(135, 206, 235), GRASS_TOP = new Color(105, 178, 55), GRASS_SIDE = new Color(92, 160, 48);
         public static final Color DIRT_BROWN = new Color(134, 96, 67), DIRT_DARK = new Color(107, 74, 49), STONE_GRAY = new Color(128, 128, 128);
@@ -1043,7 +1017,7 @@ public class Assignment1_67050476_67050613 {
 
             AffineTransform old = g.getTransform();
 
-            // Back Arm & Leg
+            // Back limbs
             g.translate(x + 8 * px, y + 8 * px); g.rotate(-lSwing);
             g.setColor(STEVE_SHIRT); g.fillRect(-2 * px, 0, 4 * px, 4 * px);
             g.setColor(STEVE_SKIN); g.fillRect(-2 * px, 4 * px, 4 * px, 8 * px);
@@ -1054,7 +1028,7 @@ public class Assignment1_67050476_67050613 {
             g.setColor(STEVE_SHOES); g.fillRect(-2 * px, 10 * px, 4 * px, 2 * px);
             g.setTransform(old);
 
-            // Body & Front Leg
+            // Body and front leg
             g.setColor(STEVE_SHIRT); g.fillRect(x + 4 * px, y + 8 * px, 8 * px, 12 * px);
             g.setColor(STEVE_SKIN); g.fillRect(x + 7 * px, y + 8 * px, 2 * px, 2 * px);
 
@@ -1063,7 +1037,7 @@ public class Assignment1_67050476_67050613 {
             g.setColor(STEVE_SHOES); g.fillRect(-2 * px, 10 * px, 4 * px, 2 * px);
             g.setTransform(old);
 
-            // Head
+            // Head and face
             g.setColor(STEVE_SKIN); g.fillRect(x + 4 * px, y, 8 * px, 8 * px);
             g.setColor(new Color(60, 35, 15)); g.fillRect(x + 4 * px, y, 8 * px, 2 * px);
             g.fillRect(right ? x + 4 * px : x + 10 * px, y + 2 * px, 2 * px, 3 * px);
@@ -1073,7 +1047,7 @@ public class Assignment1_67050476_67050613 {
             g.setColor(new Color(0, 50, 180)); g.fillRect(ex + (right ? px : 0), y + 4 * px, px, px);
             g.setColor(new Color(135, 80, 50)); g.fillRect(ex, y + 6 * px, 2 * px, px);
 
-            // Front Arm & Tool
+            // Front arm and held item
             g.translate(x + 8 * px, y + 8 * px);
             double armRot = (right ? swing : -swing) + (tool == null || "hand".equals(tool) ? lSwing : (right ? -Math.PI / 4 : Math.PI / 4));
             g.rotate(armRot);
@@ -1229,9 +1203,7 @@ public class Assignment1_67050476_67050613 {
         }
     }
 
-    // =========================================================================
-    // MIDPOINT DRAWING ALGORITHMS
-    // =========================================================================
+    // Midpoint drawing helpers
     static class MidpointDrawing {
         public static void drawCircle(PixelCanvas g, int cx, int cy, int r, Color c) { g.setColor(c); g.drawCircle(cx, cy, r); }
         public static void fillCircle(PixelCanvas g, int cx, int cy, int r, Color c) { g.setColor(c); g.fillCircle(cx, cy, r); }
@@ -1241,9 +1213,7 @@ public class Assignment1_67050476_67050613 {
         public static void fillEllipseGlow(PixelCanvas g, int cx, int cy, int rx, int ry, Color cc, Color ec) { g.fillEllipseGlow(cx, cy, rx, ry, cc, ec); }
     }
 
-    // =========================================================================
-    // PIXELCANVAS - CUSTOM COMPUTER GRAPHICS ENGINE
-    // =========================================================================
+    // Custom pixel rasterizer and CG algorithms
     static class PixelCanvas {
         private final int width, height;
         private final BufferedImage image;
@@ -1291,7 +1261,7 @@ public class Assignment1_67050476_67050613 {
             }
         }
 
-        // --- 1. BRESENHAM'S LINE ALGORITHM ---
+        // Bresenham's line algorithm
         public void drawLine(int x0, int y0, int x1, int y1) {
             Point2D.Double p0 = transformPoint(x0, y0), p1 = transformPoint(x1, y1);
             drawLineRaw((int) Math.round(p0.x), (int) Math.round(p0.y), (int) Math.round(p1.x), (int) Math.round(p1.y), currentColor);
@@ -1314,7 +1284,7 @@ public class Assignment1_67050476_67050613 {
             }
         }
 
-        // --- 2. SCANLINE FILL ALGORITHM ---
+        // Scanline horizontal fill
         public void drawHLine(int x1, int x2, int y, Color c) {
             if (y < 0 || y >= height || c == null) return;
             int minX = Math.max(0, Math.min(x1, x2)), maxX = Math.min(width - 1, Math.max(x1, x2));
@@ -1349,7 +1319,7 @@ public class Assignment1_67050476_67050613 {
             } else drawPolygon(new int[]{x, x + w - 1, x + w - 1, x}, new int[]{y, y, y + h - 1, y + h - 1}, 4);
         }
 
-        // --- 3. SCANLINE POLYGON FILL & OUTLINE ---
+        // Scanline polygon fill & outline
         public void drawPolygon(int[] xp, int[] yp, int np) {
             for (int i = 0; i < np; i++) drawLine(xp[i], yp[i], xp[(i + 1) % np], yp[(i + 1) % np]);
         }
@@ -1382,7 +1352,7 @@ public class Assignment1_67050476_67050613 {
             }
         }
 
-        // --- 4. MIDPOINT CIRCLE ALGORITHM ---
+        // Midpoint circle algorithm
         public void drawCircle(int cx, int cy, int radius) {
             Point2D.Double c = transformPoint(cx, cy);
             int icx = (int) Math.round(c.x), icy = (int) Math.round(c.y), x = radius, y = 0, p = 1 - radius;
@@ -1418,7 +1388,7 @@ public class Assignment1_67050476_67050613 {
             setColor(cc); fillCircle(cx, cy, Math.max(1, step));
         }
 
-        // --- 5. MIDPOINT ELLIPSE ALGORITHM ---
+        // Midpoint ellipse algorithm
         public void drawEllipse(int cx, int cy, int rx, int ry) {
             Point2D.Double c = transformPoint(cx, cy);
             int icx = (int) Math.round(c.x), icy = (int) Math.round(c.y);
@@ -1477,7 +1447,7 @@ public class Assignment1_67050476_67050613 {
             setColor(cc); fillCircle(cx, cy, Math.max(1, step));
         }
 
-        // --- 6. BEZIER CURVE ALGORITHM ---
+        // Bezier curves
         public void drawBezierQuadratic(double x0, double y0, double cx, double cy, double x1, double y1, int segs) {
             Point2D.Double p0 = transformPoint(x0, y0), pc = transformPoint(cx, cy), p1 = transformPoint(x1, y1);
             double px = p0.x, py = p0.y;
@@ -1520,7 +1490,7 @@ public class Assignment1_67050476_67050613 {
             fillPolygon(xp, yp, total);
         }
 
-        // --- 7. QUEUE-BASED 4-WAY FLOOD FILL ALGORITHM ---
+        // Queue-based flood fill
         public void floodFill(int sx, int sy, Color tc, Color fc) {
             if (sx < 0 || sx >= width || sy < 0 || sy >= height) return;
             int trgb = (0xFF << 24) | (tc.getRed() << 16) | (tc.getGreen() << 8) | tc.getBlue();
@@ -1545,7 +1515,7 @@ public class Assignment1_67050476_67050613 {
             }
         }
 
-        // --- 8. CUSTOM 5x7 MINECRAFT PIXEL / BITMAP FONT ENGINE ---
+        // 5x7 bitmap font renderer
         public void drawMinecraftText(String text, int x, int y, int fontSize, Color color) {
             if (text == null || text.isEmpty()) return;
             int scale = Math.max(1, fontSize / 8), curX = x;
